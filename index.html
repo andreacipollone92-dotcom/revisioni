@@ -34,7 +34,7 @@ h1{font-size:19px;margin:0;flex:1}
 #sheet h2,#tp h2{font-size:17px;margin:0 0 4px}
 #sheet label,#tp label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 #sheet textarea,#sheet select,#tp textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
-.two{display:flex;gap:8px}.two>div{flex:1}
+.two{display:flex;gap:8px}.two>div,.two>.btn{flex:1}
 .acts{display:flex;gap:8px;margin-top:14px}.acts .btn{flex:1}
 #ph{max-width:100%;max-height:220px;border-radius:10px;margin-top:8px;display:none}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:20px;font-size:14px;z-index:40;display:none}
@@ -59,8 +59,9 @@ h1{font-size:19px;margin:0;flex:1}
   <div><label for="stato">Stato</label><select id="stato"><option value="0">Aperta</option><option value="1">Risolta</option></select></div>
  </div>
  <label>Foto</label>
- <input type="file" id="file" accept="image/*" hidden>
- <button class="btn g" id="bph">📷 Scatta o scegli foto</button>
+ <input type="file" id="fcam" accept="image/*" capture="environment" hidden>
+ <input type="file" id="fgal" accept="image/*" hidden>
+ <div class="two"><button class="btn g" id="bcam">📷 Scatta</button><button class="btn g" id="bgal">🖼 Galleria</button></div>
  <img id="ph" alt="Foto segnalazione">
  <div class="acts"><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">Elimina</button><button class="btn" id="save">Salva</button></div>
 </div>
@@ -211,17 +212,19 @@ async function edit(p,nuovo){
 }
 function closeSheet(){$('#sheet').style.display='none';pin=null}
 $('#cancel').onclick=closeSheet;
-$('#bph').onclick=()=>$('#file').click();
+$('#bcam').onclick=()=>$('#fcam').click();
+$('#bgal').onclick=()=>$('#fgal').click();
 async function shrink(f){
  const b=await createImageBitmap(f),k=Math.min(1,1400/Math.max(b.width,b.height)),c=document.createElement('canvas');
  c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);
  return new Promise(r=>c.toBlob(r,'image/jpeg',.8));
 }
-$('#file').onchange=async e=>{
+const onFoto=async e=>{
  const f=e.target.files[0];if(!f)return;
  try{photoBlob=await shrink(f);$('#ph').src=URL.createObjectURL(photoBlob);$('#ph').style.display='block'}catch{toast('Foto non leggibile')}
  e.target.value='';
 };
+$('#fcam').onchange=$('#fgal').onchange=onFoto;
 async function saveData(){await up(cur.dir+'/dati.json',new Blob([JSON.stringify(data)],{type:'application/json'}));cur.d=data;cur.has=1}
 $('#save').onclick=async()=>{
  const p=pin,b=$('#save');b.disabled=true;b.textContent='Salvo…';
