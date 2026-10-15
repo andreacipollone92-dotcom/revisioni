@@ -304,4 +304,9 @@ async function start(){
  try{await load()}catch(e){$('#list').innerHTML='<div class="msg"><p>Impossibile leggere Dropbox. Controlla la connessione.</p><button class="btn" id="rt">Riprova</button></div>';$('#rt').onclick=start}
 }
 (async()=>{
- co
+ const q=new URLSearchParams(location.search),code=q.get('code'),er=q.get('error_description')||q.get('error');
+ if(er){toast('Dropbox: '+er);history.replaceState(null,'',redirect)}
+ if(code){try{await tok({grant_type:'authorization_code',code,code_verifier:LS.v,redirect_uri:redirect})}catch(e){toast('Accesso non riuscito: '+String(e.message).slice(0,120))}history.replaceState(null,'',redirect)}
+ start();
+})();
+</script></body></html>
