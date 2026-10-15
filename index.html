@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Lavori Palazzina</title>
+<title>EURORA LIVING</title>
 <style>
 :root{--bg:#e9edf1;--card:#fff;--ink:#101c26;--mut:#5d6b78;--acc:#0b5f8a;--red:#d62828;--grn:#1f9d4a;--line:#d3dae0}
 @media(prefers-color-scheme:dark){:root{--bg:#0f151a;--card:#19222a;--ink:#e8eef2;--mut:#8fa0ad;--acc:#4fb0e3;--line:#2b3741;--grn:#4cd070}}
@@ -48,10 +48,29 @@ h1{font-size:22px;margin:0;flex:1;letter-spacing:.3px}
 #ph{height:44px;border-radius:8px;display:none}
 .acts{display:flex;gap:8px;margin-top:10px}.acts .btn{flex:1}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:20px;font-size:14px;z-index:40;display:none;max-width:90%}
+.ed{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}
+.eh{display:flex;align-items:center;gap:12px;padding:22px 14px 22px 16px;cursor:pointer;border-left:8px solid var(--acc)}
+.eh b{font-size:26px}.eh .n{flex:1;color:var(--mut);font-size:15px}
+.fh{border-top:1px solid var(--line);border-left:0;padding:16px 14px 16px 30px;background:color-mix(in srgb,var(--acc) 8%,transparent)}
+.fh b{font-size:21px}
+.row{padding-left:44px}
+.nb{font-weight:800;font-size:22px;min-width:28px;text-align:center}.nb.r{color:var(--red)}.nb.g{color:var(--grn)}
+.sums{display:flex;gap:10px;margin:14px 0 2px}.sc{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.sc small{display:block;color:var(--mut);font-size:14px}.sc .big{font-size:40px;font-weight:800;line-height:1.1}
+.acts .btn{flex:1;padding:11px 4px;font-size:14px;white-space:nowrap}#stato{flex:1.8}
+.pin{user-select:none;-webkit-user-select:none}
+#tp{top:50%;bottom:auto;left:50%;right:auto;transform:translate(-50%,-50%);width:min(92vw,420px);max-height:80vh;overflow:auto;border-radius:16px;padding:16px;box-shadow:0 0 0 100vmax #000a}
+.tr{display:flex;gap:8px;align-items:center;margin:8px 0}
+.tr input{flex:1;min-width:0;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.sw{width:46px;height:38px;border-radius:8px;border:2px solid var(--line);flex:none;padding:0;cursor:pointer}
+#tlist .sb{flex:none;padding:8px 12px}
+#pal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#000a}
+#pgrid{background:var(--card);padding:14px;border-radius:14px;display:grid;grid-template-columns:repeat(6,1fr);gap:10px;width:min(92vw,380px)}
+#pgrid .sw{width:100%;height:44px}
 </style></head><body>
-<header><h1>Lavori Palazzina</h1>
+<header><h1>EURORA LIVING</h1>
 <button class="hb" id="bref" title="Aggiorna">⟳</button>
-<button class="hb" id="btag">Tag</button>
+<button class="hb" id="btag">Categorie</button>
 <button class="hb" id="bout">Esci</button></header>
 <div id="list"></div>
 
@@ -64,17 +83,20 @@ h1{font-size:22px;margin:0;flex:1;letter-spacing:.3px}
 <div id="sheet">
  <textarea id="desc" rows="2"></textarea>
  <div id="chips"></div>
- <div class="srow"><button class="btn g sb" id="stato">Aperta</button><button class="btn g sb" id="bcam">📷</button><button class="btn g sb" id="bgal">🖼</button><img id="ph" alt="Foto"></div>
+ <img id="ph" alt="Foto">
  <input type="file" id="fcam" accept="image/*" capture="environment" hidden>
  <input type="file" id="fgal" accept="image/*" hidden>
- <div class="acts"><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">Elimina</button><button class="btn" id="save">Salva</button></div>
+ <div class="acts"><button class="btn g" id="stato">Aperta</button><button class="btn g" id="bcam">📷</button><button class="btn g" id="bgal">🖼</button><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">🗑</button><button class="btn" id="save">Salva</button></div>
 </div>
-<div id="tp"><h2>Categorie</h2><label for="tl">Una per riga. Il colore (#rrggbb) si può modificare.</label><textarea id="tl" rows="8"></textarea><div class="acts"><button class="btn g" id="tcancel">Annulla</button><button class="btn" id="tsave">Salva</button></div></div>
+<div id="tp"><h2>Categorie</h2><div id="tlist"></div><button class="btn g" id="tadd">+ Aggiungi categoria</button><div class="acts"><button class="btn g" id="tcancel">Annulla</button><button class="btn" id="tsave">Salva</button></div></div>
+<div id="pal"><div id="pgrid"></div></div>
 <div id="toast"></div>
 
 <script>
 const $=s=>document.querySelector(s),LS=localStorage;
 const PAL=['#e6194b','#f58231','#4363d8','#911eb4','#42d4f4','#f032e6','#9a6324','#008080','#800000','#808000','#000075','#a9a9a9'];
+const hx=(h,s,l)=>{s/=100;l/=100;const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;return l-a*Math.max(-1,Math.min(k-3,9-k,1))};return'#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')};
+const COL=[...PAL];for(const l of[36,50,66])for(let h=0;h<360;h+=30)COL.push(hx(h,75,l));COL.push('#111111','#6b7280','#d1d5db');
 const DEF=['Elettrico','Idraulico','Edile','Serramenti','Imbianchino','Pavimenti','Altro'].map((n,i)=>({n,c:PAL[i]}));
 const CFG='/impostazioni/categorie.json';
 let T=JSON.parse(LS.t||'null'),interni={},tags=DEF,cur=null,data=null,view={x:0,y:0,s:1},pin=null,dr={tag:'',done:false},isNew=false,photoBlob=null;
@@ -125,12 +147,13 @@ async function load(){
  interni={};
  for(const e of all){
   const p=e.path_display.split('/').filter(Boolean);
-  if(p[0]&&/^[A-Za-z]\d{2}$/.test(p[0])){
-   const i=interni[p[0].toUpperCase()]=interni[p[0].toUpperCase()]||{k:p[0].toUpperCase(),dir:'/'+p[0]};
-   if(p.length==2&&e['.tag']=='file'){
-    if(/\.(jpe?g|png)$/i.test(p[1])&&!i.plan)i.plan=e.path_display;
-    if(p[1].toLowerCase()=='dati.json')i.has=1;
-   }
+  if(p.length<3||/^impostazioni$/i.test(p[0]))continue;
+  if(p.length==3&&e['.tag']!='folder')continue;
+  const key=p.slice(0,3).join('/').toLowerCase();
+  const i=interni[key]=interni[key]||{key,k:p[2].toUpperCase(),b:p[0],f:p[1],dir:'/'+p.slice(0,3).join('/')};
+  if(p.length==4&&e['.tag']=='file'){
+   if(/\.(jpe?g|png)$/i.test(p[3])&&(!i.plan||/^pianta\./i.test(p[3])))i.plan=e.path_display;
+   if(p[3].toLowerCase()=='dati.json')i.has=1;
   }
  }
  try{const t=(await jget(CFG)).tags;if(!t||!t.length)throw Error('vuoto');tags=t}
@@ -139,22 +162,29 @@ async function load(){
  render();
 }
 const cnt=i=>{const p=(i.d&&i.d.pins)||[];return[p.filter(x=>!x.done).length,p.filter(x=>x.done).length]};
-const tri=n=>n?`<svg width="46" height="42" viewBox="0 0 44 40"><path d="M22 4 41 36H3Z" fill="#d62828" stroke="#d62828" stroke-width="5" stroke-linejoin="round"/><text x="22" y="32" text-anchor="middle" font-size="17" font-weight="800" fill="#fff">${n}</text></svg>`:'';
-const bd=(o,r)=>`<div class="bd">${tri(o)}${r?`<span class="okb">✓ ${r}</span>`:''}</div>`;
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const natural=(a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'});
+const sum=a=>a.reduce((s,i)=>{const c=cnt(i);return[s[0]+c[0],s[1]+c[1]]},[0,0]);
+const nums=t=>`<span class="nb r">${t[0]}</span><span class="nb g">${t[1]}</span>`;
 function render(){
- const L=Object.values(interni).sort((a,b)=>a.k.localeCompare(b.k));
- if(!L.length){$('#list').innerHTML='<div class="msg">Nessuna cartella trovata. Nel Dropbox crea una cartella per interno (A14, A15…) con dentro la pianta in JPEG, poi tocca ⟳.</div>';return}
- const G={};L.forEach(i=>{const m=i.k.match(/^[A-Z](\d)/),f=m?m[1]:'?';(G[f]=G[f]||[]).push(i)});
- let to=0,tr=0,h='';
- for(const f of Object.keys(G).sort()){
-  let o=0,r=0;G[f].forEach(i=>{const c=cnt(i);o+=c[0];r+=c[1]});to+=o;tr+=r;
-  h+=`<div class="fl"><div class="fh" data-f="${f}"><b>Piano ${f}</b><span class="n">${G[f].length} interni</span>${bd(o,r)}<span class="chev">${openF.has(f)?'▾':'▸'}</span></div>`
-   +(openF.has(f)?G[f].map(i=>`<div class="row" data-k="${i.k}"><b>${i.k}</b><span>${i.plan?'':'manca la pianta'}</span>${bd(...cnt(i))}</div>`).join(''):'')+'</div>';
+ const L=Object.values(interni);
+ if(!L.length){$('#list').innerHTML='<div class="msg">Nessuna cartella trovata. Nel Dropbox crea Edificio / Piano / Interno (es. A / piano 0 / a01), con la pianta JPEG dentro la cartella dell\'interno, poi tocca ⟳.</div>';return}
+ const B={};L.forEach(i=>{B[i.b]=B[i.b]||{};(B[i.b][i.f]=B[i.b][i.f]||[]).push(i)});
+ const all=sum(L);let h='';
+ for(const b of Object.keys(B).sort(natural)){
+  const fl=B[b],bi=Object.values(fl).flat();
+  h+=`<div class="ed"><div class="eh" data-f="${b}"><b>${b.length<=2?'Edificio '+b.toUpperCase():cap(b)}</b><span class="n">${bi.length} interni</span>${nums(sum(bi))}<span class="chev">${openF.has(b)?'▾':'▸'}</span></div>`;
+  if(openF.has(b))for(const f of Object.keys(fl).sort(natural)){
+   const k=b+'/'+f,I=fl[f].sort((x,y)=>natural(x.k,y.k));
+   h+=`<div class="fh" data-f="${k}"><b>${cap(f)}</b><span class="n">${I.length} interni</span>${nums(sum(I))}<span class="chev">${openF.has(k)?'▾':'▸'}</span></div>`
+    +(openF.has(k)?I.map(i=>`<div class="row" data-k="${i.key}"><b>${i.k}</b><span>${i.plan?'':'manca la pianta'}</span>${nums(cnt(i))}</div>`).join(''):'');
+  }
+  h+='</div>';
  }
- $('#list').innerHTML=`<div class="sum"><span class="big">${to}</span> aperte <span class="big g">${tr}</span> risolte</div>`+h;
+ $('#list').innerHTML=`<div class="sums"><div class="sc"><small>Attività aperte:</small><span class="big" style="color:var(--red)">${all[0]}</span></div><div class="sc"><small>Attività chiuse:</small><span class="big" style="color:var(--grn)">${all[1]}</span></div></div>`+h;
 }
 $('#list').onclick=e=>{
- const h=e.target.closest('.fh');
+ const h=e.target.closest('.eh,.fh');
  if(h){const f=h.dataset.f;openF.has(f)?openF.delete(f):openF.add(f);return render()}
  const r=e.target.closest('.row');if(r)openInt(r.dataset.k);
 };
@@ -162,8 +192,8 @@ $('#list').onclick=e=>{
 /* ---------- Pianta ---------- */
 function apply(){const l=$('#layer');l.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`;l.style.setProperty('--k',1/view.s)}
 function fit(){
- const st=$('#stage'),im=$('#plan'),s=Math.min(st.clientWidth/im.naturalWidth,st.clientHeight/im.naturalHeight);
- view={s,x:(st.clientWidth-im.naturalWidth*s)/2,y:(st.clientHeight-im.naturalHeight*s)/2};apply();
+ const st=$('#stage'),im=$('#plan'),s=st.clientWidth/im.naturalWidth;
+ view={s,x:0,y:$('#vbar').offsetHeight};apply();
 }
 function zoomAt(cx,cy,f){
  const s=Math.min(Math.max(view.s*f,.05),12);f=s/view.s;
@@ -204,17 +234,29 @@ const pts=()=>[...P.values()],dist=()=>{const[a,b]=pts();return Math.hypot(a[0]-
 stg.onpointerdown=e=>{
  stg.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
  if(P.size>1&&g){g.d=dist();g.m=99}
- else g={t:Date.now(),x:e.clientX,y:e.clientY,m:0,pin:e.target.closest('.pin'),d:0};
+ else{
+  const el=e.target.closest('.pin'),me=g={t:Date.now(),x:e.clientX,y:e.clientY,m:0,pin:el,p:el&&data.pins.find(x=>x.id==el.dataset.id),d:0};
+  if(me.p)me.tm=setTimeout(()=>{if(g===me&&P.size==1&&me.m<8){me.drag=1;me.pin.style.outline='3px solid #fff';navigator.vibrate&&navigator.vibrate(40)}},450);
+ }
 };
 stg.onpointermove=e=>{
  if(!P.has(e.pointerId)||!g)return;
  const o=P.get(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+ if(g.drag){
+  const r=$('#plan').getBoundingClientRect();
+  g.p.x=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));g.p.y=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));
+  g.pin.style.left=g.p.x*100+'%';g.pin.style.top=g.p.y*100+'%';return;
+ }
  if(P.size==1){view.x+=e.clientX-o[0];view.y+=e.clientY-o[1];g.m=Math.max(g.m,Math.hypot(e.clientX-g.x,e.clientY-g.y));apply()}
  else if(P.size==2){const d=dist(),c=mid();zoomAt(c[0],c[1],d/g.d);g.d=d;g.m=99}
 };
 stg.onpointerup=stg.onpointercancel=e=>{
  P.delete(e.pointerId);
- if(P.size==0&&g){if(g.m<8&&Date.now()-g.t<600&&e.type=='pointerup')tap(e,g.pin);g=null}
+ if(P.size==0&&g){
+  clearTimeout(g.tm);
+  if(g.drag){g.pin.style.outline='';saveData().then(()=>toast('Posizione salvata')).catch(()=>toast('Errore: posizione non salvata'));g=null;return}
+  if(g.m<8&&Date.now()-g.t<600&&e.type=='pointerup')tap(e,g.pin);g=null;
+ }
 };
 stg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY<0?1.15:1/1.15)},{passive:false});
 function tap(e,el){
@@ -275,22 +317,34 @@ $('#save').onclick=async()=>{
  b.disabled=false;b.textContent='Salva';
 };
 $('#del').onclick=async function(){
- if(!this.dataset.c){this.dataset.c=1;this.textContent='Confermi?';setTimeout(()=>{delete this.dataset.c;this.textContent='Elimina'},3000);return}
- delete this.dataset.c;this.textContent='Elimina';
+ if(!this.dataset.c){this.dataset.c=1;this.textContent='Sicuro?';setTimeout(()=>{delete this.dataset.c;this.textContent='🗑'},3000);return}
+ delete this.dataset.c;this.textContent='🗑';
  const keep=data.pins;data.pins=keep.filter(x=>x!==pin);
  try{await saveData();closeSheet();toast('Eliminata')}catch{data.pins=keep;toast('Errore: non eliminata')}
 };
 
 /* ---------- Impostazioni ---------- */
 $('#bref').onclick=()=>{if(T)start()};
-$('#btag').onclick=()=>{$('#tl').value=tags.map(t=>t.n+' '+t.c).join('\n');$('#tp').style.display='block'};
+let td=[],ti=0;
+function trender(){
+ const b=$('#tlist');
+ b.innerHTML=td.map((t,i)=>`<div class="tr"><input data-i="${i}"${t.o?' readonly':''} placeholder="Nome categoria"><button class="sw" data-i="${i}" style="background:${t.c}"></button><button class="btn g sb" data-x="${i}">✕</button></div>`).join('');
+ b.querySelectorAll('input').forEach(x=>x.value=td[x.dataset.i].n);
+}
+$('#tlist').oninput=e=>{if(e.target.tagName=='INPUT')td[e.target.dataset.i].n=e.target.value};
+$('#tlist').onclick=e=>{
+ const s=e.target.closest('.sw'),x=e.target.closest('[data-x]');
+ if(s){ti=+s.dataset.i;$('#pal').style.display='flex'}
+ if(x){td.splice(+x.dataset.x,1);trender()}
+};
+$('#pgrid').innerHTML=COL.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');
+$('#pal').onclick=e=>{const b=e.target.closest('[data-c]');if(b){td[ti].c=b.dataset.c;trender()}$('#pal').style.display='none'};
+$('#btag').onclick=()=>{td=tags.map(t=>({...t,o:1}));trender();$('#tp').style.display='block'};
+$('#tadd').onclick=()=>{const u=new Set(td.map(t=>t.c));td.push({n:'',c:PAL.find(c=>!u.has(c))||'#888888'});trender();const i=$('#tlist').querySelectorAll('input');i[i.length-1].focus()};
 $('#tcancel').onclick=()=>$('#tp').style.display='none';
 $('#tsave').onclick=async()=>{
- const L=$('#tl').value.split('\n').map(s=>s.trim()).filter(Boolean).map(s=>{const m=s.match(/^(.*?)\s*(#[0-9a-fA-F]{6})$/);return m&&m[1]?{n:m[1],c:m[2]}:{n:s}});
+ const L=td.map(t=>({n:t.n.trim(),c:t.c})).filter(t=>t.n);
  if(!L.length)return toast('Inserisci almeno una categoria');
- L.forEach(x=>{if(!x.c){const o=tags.find(t=>t.n==x.n);if(o)x.c=o.c}});
- const used=new Set(L.map(x=>x.c));
- L.forEach(x=>{if(!x.c){x.c=PAL.find(c=>!used.has(c))||'#888888';used.add(x.c)}});
  try{await jput(CFG,{tags:L});tags=L;$('#tp').style.display='none';toast('Categorie salvate')}catch{toast('Errore nel salvataggio')}
 };
 $('#bout').onclick=function(){
