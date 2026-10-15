@@ -3,46 +3,56 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Lavori Palazzina</title>
 <style>
-:root{--bg:#eceff2;--card:#fff;--ink:#14212b;--mut:#62707c;--acc:#1b4f72;--red:#d62828;--grn:#2a9d4a;--line:#d5dbe0}
-@media(prefers-color-scheme:dark){:root{--bg:#12181d;--card:#1b232a;--ink:#e6ecf0;--mut:#93a1ad;--acc:#5fa3d0;--line:#2c3740}}
+:root{--bg:#e9edf1;--card:#fff;--ink:#101c26;--mut:#5d6b78;--acc:#0b5f8a;--red:#d62828;--grn:#1f9d4a;--line:#d3dae0}
+@media(prefers-color-scheme:dark){:root{--bg:#0f151a;--card:#19222a;--ink:#e8eef2;--mut:#8fa0ad;--acc:#4fb0e3;--line:#2b3741;--grn:#4cd070}}
 *{box-sizing:border-box}html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding-top:env(safe-area-inset-top)}
-button,select,textarea{font:inherit;color:inherit}
-header{display:flex;align-items:center;gap:8px;padding:12px 14px;position:sticky;top:env(safe-area-inset-top);background:var(--bg);border-bottom:1px solid var(--line);z-index:5}
-h1{font-size:19px;margin:0;flex:1}
-.btn{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:10px 14px;cursor:pointer}
+body{background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+button,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:#0b3b57;color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;display:flex;align-items:center;gap:8px}
+h1{font-size:22px;margin:0;flex:1;letter-spacing:.3px}
+.hb{background:#ffffff26;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-size:15px}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:11px 14px;cursor:pointer}
 .btn.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
-.btn.d{background:var(--red)}
-#list{padding:6px 12px 40px;max-width:640px;margin:0 auto}
-.row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:8px 0;cursor:pointer}
-.row b{font-size:19px;min-width:56px}.row span{color:var(--mut);flex:1;font-size:14px}
-.ind{min-width:30px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px;padding:0 6px}
-.ind.o{background:var(--red)}.ind.k{background:var(--grn)}
+.btn.d{background:var(--red);color:#fff}
+#list{padding:6px 12px 50px;max-width:680px;margin:0 auto}
+.sum{display:flex;gap:6px;align-items:baseline;padding:14px 4px 2px;color:var(--mut);font-size:16px}
+.sum .big{font-size:30px;font-weight:800;color:var(--red)}.sum .big.g{color:var(--grn);margin-left:8px}
+.fl{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}
+.fh,.row{display:flex;align-items:center;gap:12px;cursor:pointer}
+.fh{padding:20px 14px 20px 16px;border-left:7px solid var(--acc)}
+.fh b{font-size:24px}.fh .n{flex:1;color:var(--mut);font-size:15px}
+.chev{font-size:20px;color:var(--mut);width:20px;text-align:center}
+.row{padding:16px 14px 16px 18px;border-top:1px solid var(--line)}
+.row b{font-size:26px;min-width:84px;letter-spacing:.5px}.row span{flex:1;color:var(--mut);font-size:15px}
+.bd{display:flex;align-items:center;gap:10px}
+.okb{font-weight:800;font-size:20px;color:var(--grn);white-space:nowrap}
 .msg{padding:40px 20px;text-align:center;color:var(--mut)}
 .msg input{width:100%;max-width:420px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin:8px 0 12px}
 .msg small{display:block;margin-top:18px;word-break:break-all}
 #viewer{position:fixed;inset:0;background:#0d1114;z-index:10;display:none}
 #vbar{position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;display:flex;gap:8px;align-items:center;z-index:3;background:rgba(0,0,0,.6);color:#fff}
-#vbar b{flex:1;font-size:18px}
-#vbar .btn{background:#ffffff22;padding:8px 14px}
+#vbar b{flex:1;font-size:20px}
+#vbar .btn{background:#ffffff26;padding:8px 14px}
 #stage{position:absolute;inset:0;overflow:hidden;touch-action:none}
 #layer{position:absolute;left:0;top:0;transform-origin:0 0}
 #plan{display:block;max-width:none;user-select:none;-webkit-user-drag:none;background:#fff}
-.pin{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;border:3px solid var(--red);background:#fff;color:#111;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;transform:scale(var(--k,1));box-shadow:0 1px 4px #0009}
-.pin.k{border-color:var(--grn)}
-#sheet,#tp{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -6px 30px #0006;display:none;max-height:88%;overflow:auto}
-#sheet h2,#tp h2{font-size:17px;margin:0 0 4px}
-#sheet label,#tp label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
-#sheet textarea,#sheet select,#tp textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
-.two{display:flex;gap:8px}.two>div,.two>.btn{flex:1}
-.acts{display:flex;gap:8px;margin-top:14px}.acts .btn{flex:1}
-#ph{max-width:100%;max-height:220px;border-radius:10px;margin-top:8px;display:none}
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:20px;font-size:14px;z-index:40;display:none}
+.pin{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:4px solid #222;background:#fff;color:#111;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;transform:scale(var(--k,1));box-shadow:0 1px 5px #000a}
+#sheet,#tp{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-radius:14px 14px 0 0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -4px 20px #0007;display:none}
+#sheet textarea,#tp textarea{width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:none}
+#tp h2{font-size:17px;margin:0 0 6px}#tp label{display:block;font-size:13px;color:var(--mut);margin-bottom:4px}
+#chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+.chip{flex:none;border:2px solid;border-radius:20px;padding:6px 13px;background:transparent;font-size:15px}
+.chip.on{color:#fff;font-weight:700}
+.srow{display:flex;gap:8px;align-items:center}
+.sb{flex:none;padding:8px 13px}
+#ph{height:44px;border-radius:8px;display:none}
+.acts{display:flex;gap:8px;margin-top:10px}.acts .btn{flex:1}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:20px;font-size:14px;z-index:40;display:none;max-width:90%}
 </style></head><body>
 <header><h1>Lavori Palazzina</h1>
-<button class="btn g" id="bref" title="Aggiorna">⟳</button>
-<button class="btn g" id="btag">Tag</button>
-<button class="btn g" id="bout">Esci</button></header>
+<button class="hb" id="bref" title="Aggiorna">⟳</button>
+<button class="hb" id="btag">Tag</button>
+<button class="hb" id="bout">Esci</button></header>
 <div id="list"></div>
 
 <div id="viewer">
@@ -52,30 +62,27 @@ h1{font-size:19px;margin:0;flex:1}
 </div>
 
 <div id="sheet">
- <h2 id="sn"></h2>
- <label for="desc">Descrizione</label><textarea id="desc" rows="3"></textarea>
- <div class="two">
-  <div><label for="tag">Tag</label><select id="tag"></select></div>
-  <div><label for="stato">Stato</label><select id="stato"><option value="0">Aperta</option><option value="1">Risolta</option></select></div>
- </div>
- <label>Foto</label>
+ <textarea id="desc" rows="2"></textarea>
+ <div id="chips"></div>
+ <div class="srow"><button class="btn g sb" id="stato">Aperta</button><button class="btn g sb" id="bcam">📷</button><button class="btn g sb" id="bgal">🖼</button><img id="ph" alt="Foto"></div>
  <input type="file" id="fcam" accept="image/*" capture="environment" hidden>
  <input type="file" id="fgal" accept="image/*" hidden>
- <div class="two"><button class="btn g" id="bcam">📷 Scatta</button><button class="btn g" id="bgal">🖼 Galleria</button></div>
- <img id="ph" alt="Foto segnalazione">
  <div class="acts"><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">Elimina</button><button class="btn" id="save">Salva</button></div>
 </div>
-<div id="tp"><h2>Tag</h2><label for="tl">Uno per riga</label><textarea id="tl" rows="8"></textarea><div class="acts"><button class="btn g" id="tcancel">Annulla</button><button class="btn" id="tsave">Salva</button></div></div>
+<div id="tp"><h2>Categorie</h2><label for="tl">Una per riga. Il colore (#rrggbb) si può modificare.</label><textarea id="tl" rows="8"></textarea><div class="acts"><button class="btn g" id="tcancel">Annulla</button><button class="btn" id="tsave">Salva</button></div></div>
 <div id="toast"></div>
 
 <script>
 const $=s=>document.querySelector(s),LS=localStorage;
-const DEF_TAGS=['Elettrico','Idraulico','Edile','Serramenti','Imbianchino','Pavimenti','Altro'];
-let T=JSON.parse(LS.t||'null'),interni={},tags=DEF_TAGS,cur=null,data=null,view={x:0,y:0,s:1},pin=null,isNew=false,photoBlob=null;
-const cache={},redirect=location.origin+location.pathname;
+const PAL=['#e6194b','#f58231','#4363d8','#911eb4','#42d4f4','#f032e6','#9a6324','#008080','#800000','#808000','#000075','#a9a9a9'];
+const DEF=['Elettrico','Idraulico','Edile','Serramenti','Imbianchino','Pavimenti','Altro'].map((n,i)=>({n,c:PAL[i]}));
+const CFG='/impostazioni/categorie.json';
+let T=JSON.parse(LS.t||'null'),interni={},tags=DEF,cur=null,data=null,view={x:0,y:0,s:1},pin=null,dr={tag:'',done:false},isNew=false,photoBlob=null;
+const cache={},openF=new Set(),redirect=location.origin+location.pathname;
 const toast=m=>{const e=$('#toast');e.textContent=m;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2600)};
+const tagColor=n=>(tags.find(t=>t.n==n)||{}).c;
 
-/* ---------- Dropbox: accesso (OAuth PKCE, rinnovo automatico) ---------- */
+/* ---------- Dropbox: accesso ---------- */
 const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 async function login(){
  const key=(($('#key')||{}).value||'').trim()||LS.appkey;
@@ -101,15 +108,16 @@ async function rpc(ep,body){
 }
 async function dl(path){
  const r=await fetch('https://content.dropboxapi.com/2/files/download',{method:'POST',headers:{Authorization:'Bearer '+await token(),'Dropbox-API-Arg':esc(JSON.stringify({path}))}});
- if(!r.ok)throw Error('dl');return r.blob();
+ if(!r.ok)throw Error('dl'+r.status);return r.blob();
 }
 async function up(path,blob){
  const r=await fetch('https://content.dropboxapi.com/2/files/upload',{method:'POST',headers:{Authorization:'Bearer '+await token(),'Dropbox-API-Arg':esc(JSON.stringify({path,mode:'overwrite',mute:true})),'Content-Type':'application/octet-stream'},body:blob});
  if(!r.ok)throw Error('up');
 }
 const jget=async p=>JSON.parse(await (await dl(p)).text());
+const jput=(p,o)=>up(p,new Blob([JSON.stringify(o)],{type:'application/json'}));
 
-/* ---------- Elenco interni ---------- */
+/* ---------- Elenco ---------- */
 async function load(){
  $('#list').innerHTML='<div class="msg">Caricamento…</div>';
  let r=await rpc('files/list_folder',{path:'',recursive:true,limit:2000}),all=r.entries;
@@ -125,22 +133,33 @@ async function load(){
    }
   }
  }
- try{tags=(await jget('/config.json')).tags||DEF_TAGS}catch{tags=DEF_TAGS}
+ try{const t=(await jget(CFG)).tags;if(!t||!t.length)throw Error('vuoto');tags=t}
+ catch(e){tags=DEF;if(String(e.message)=='dl409')jput(CFG,{tags}).catch(()=>{})}
  await Promise.all(Object.values(interni).filter(i=>i.has).map(async i=>{try{i.d=await jget(i.dir+'/dati.json')}catch{}}));
  render();
 }
-function ind(i){
- const p=(i.d&&i.d.pins)||[];if(!p.length)return'';
- const o=p.filter(x=>!x.done).length;
- return o?`<div class="ind o">${o}</div>`:'<div class="ind k">✓</div>';
-}
+const cnt=i=>{const p=(i.d&&i.d.pins)||[];return[p.filter(x=>!x.done).length,p.filter(x=>x.done).length]};
+const tri=n=>n?`<svg width="46" height="42" viewBox="0 0 44 40"><path d="M22 4 41 36H3Z" fill="#d62828" stroke="#d62828" stroke-width="5" stroke-linejoin="round"/><text x="22" y="32" text-anchor="middle" font-size="17" font-weight="800" fill="#fff">${n}</text></svg>`:'';
+const bd=(o,r)=>`<div class="bd">${tri(o)}${r?`<span class="okb">✓ ${r}</span>`:''}</div>`;
 function render(){
  const L=Object.values(interni).sort((a,b)=>a.k.localeCompare(b.k));
- $('#list').innerHTML=L.length?L.map(i=>`<div class="row" data-k="${i.k}"><b>${i.k}</b><span>${i.plan?'':'manca la pianta JPEG'}</span>${ind(i)}</div>`).join(''):'<div class="msg">Nessuna cartella trovata. Nel Dropbox crea una cartella per interno (A14, A15…) con dentro la pianta in JPEG, poi tocca ⟳.</div>';
+ if(!L.length){$('#list').innerHTML='<div class="msg">Nessuna cartella trovata. Nel Dropbox crea una cartella per interno (A14, A15…) con dentro la pianta in JPEG, poi tocca ⟳.</div>';return}
+ const G={};L.forEach(i=>{const m=i.k.match(/^[A-Z](\d)/),f=m?m[1]:'?';(G[f]=G[f]||[]).push(i)});
+ let to=0,tr=0,h='';
+ for(const f of Object.keys(G).sort()){
+  let o=0,r=0;G[f].forEach(i=>{const c=cnt(i);o+=c[0];r+=c[1]});to+=o;tr+=r;
+  h+=`<div class="fl"><div class="fh" data-f="${f}"><b>Piano ${f}</b><span class="n">${G[f].length} interni</span>${bd(o,r)}<span class="chev">${openF.has(f)?'▾':'▸'}</span></div>`
+   +(openF.has(f)?G[f].map(i=>`<div class="row" data-k="${i.k}"><b>${i.k}</b><span>${i.plan?'':'manca la pianta'}</span>${bd(...cnt(i))}</div>`).join(''):'')+'</div>';
+ }
+ $('#list').innerHTML=`<div class="sum"><span class="big">${to}</span> aperte <span class="big g">${tr}</span> risolte</div>`+h;
 }
-$('#list').onclick=e=>{const r=e.target.closest('.row');if(r)openInt(r.dataset.k)};
+$('#list').onclick=e=>{
+ const h=e.target.closest('.fh');
+ if(h){const f=h.dataset.f;openF.has(f)?openF.delete(f):openF.add(f);return render()}
+ const r=e.target.closest('.row');if(r)openInt(r.dataset.k);
+};
 
-/* ---------- Pianta: zoom, pan, pin ---------- */
+/* ---------- Pianta ---------- */
 function apply(){const l=$('#layer');l.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`;l.style.setProperty('--k',1/view.s)}
 function fit(){
  const st=$('#stage'),im=$('#plan'),s=Math.min(st.clientWidth/im.naturalWidth,st.clientHeight/im.naturalHeight);
@@ -150,18 +169,31 @@ function zoomAt(cx,cy,f){
  const s=Math.min(Math.max(view.s*f,.05),12);f=s/view.s;
  view.x=cx-(cx-view.x)*f;view.y=cy-(cy-view.y)*f;view.s=s;apply();
 }
+function reveal(){
+ if(!pin)return;const im=$('#plan');
+ const sy=view.y+pin.y*im.naturalHeight*view.s,hi=innerHeight-$('#sheet').offsetHeight-40,lo=90;
+ if(sy>hi)view.y-=sy-hi;else if(sy<lo)view.y+=lo-sy;apply();
+}
 function drawPins(){
- const L=$('#layer');L.querySelectorAll('.pin').forEach(p=>p.remove());
- for(const p of data.pins){const d=document.createElement('div');d.className='pin'+(p.done?' k':'');d.dataset.id=p.id;d.textContent=p.n;d.style.left=p.x*100+'%';d.style.top=p.y*100+'%';L.appendChild(d)}
+ const L=$('#layer');L.querySelectorAll('.pin').forEach(x=>x.remove());
+ const a=[...data.pins];if(pin&&isNew)a.push(pin);
+ for(const p of a){
+  const me=p===pin,t=me?dr.tag:p.tag,d=me?dr.done:p.done;
+  const e=document.createElement('div');e.className='pin';e.dataset.id=p.id;e.textContent=p.n;
+  e.style.left=p.x*100+'%';e.style.top=p.y*100+'%';
+  if(!t){e.style.background='#f4ff2e';e.style.borderColor='#222'}
+  else{e.style.borderColor=tagColor(t)||'#222';e.style.background=d?'#5fd47a':'#fff'}
+  L.appendChild(e);
+ }
 }
 async function openInt(k){
  const i=interni[k];if(!i.plan)return toast('Manca la pianta JPEG nella cartella '+k);
- cur=i;data=i.d||{pins:[]};data.pins=data.pins||[];
+ cur=i;data=i.d||{pins:[]};data.pins=data.pins||[];pin=null;
  $('#vt').textContent=k;$('#viewer').style.display='block';
  const im=$('#plan');im.onload=()=>{fit();drawPins()};
  try{if(!i.url)i.url=URL.createObjectURL(await dl(i.plan));im.src=i.url}catch{toast('Pianta non scaricata');closeViewer()}
 }
-function closeViewer(){$('#viewer').style.display='none';closeSheet();render()}
+function closeViewer(){closeSheet();$('#viewer').style.display='none';render()}
 $('#vback').onclick=closeViewer;
 $('#zi').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1.4);
 $('#zo').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1/1.4);
@@ -182,35 +214,36 @@ stg.onpointermove=e=>{
 };
 stg.onpointerup=stg.onpointercancel=e=>{
  P.delete(e.pointerId);
- if(P.size==0&&g){
-  if(g.m<8&&Date.now()-g.t<600&&e.type=='pointerup')tap(e,g.pin);
-  g=null;
- }
+ if(P.size==0&&g){if(g.m<8&&Date.now()-g.t<600&&e.type=='pointerup')tap(e,g.pin);g=null}
 };
 stg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY<0?1.15:1/1.15)},{passive:false});
 function tap(e,el){
- if($('#sheet').style.display=='block')return closeSheet();
- if(el){const p=data.pins.find(x=>x.id==el.dataset.id);if(p)return edit(p,false)}
+ if(el){const p=data.pins.find(x=>x.id==el.dataset.id);if(p){if(p===pin)return;closeSheet();return edit(p,false)}}
  const r=$('#plan').getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
  if(x<0||x>1||y<0||y>1)return;
+ if(pin&&isNew){pin.x=x;pin.y=y;drawPins();return reveal()}
+ if(pin)return closeSheet();
  const n=data.pins.reduce((m,p)=>Math.max(m,p.n),0)+1;
- edit({id:Date.now().toString(36),n,x,y,desc:'',tag:tags[0],done:false,photo:''},true);
+ edit({id:Date.now().toString(36),n,x,y,desc:'',tag:'',done:false,photo:''},true);
 }
 
 /* ---------- Segnalazione ---------- */
-async function edit(p,nuovo){
- pin=p;isNew=nuovo;photoBlob=null;
- $('#sn').textContent='Segnalazione '+p.n;$('#desc').value=p.desc||'';
- const tl=tags.includes(p.tag)||!p.tag?tags:[...tags,p.tag];
- $('#tag').innerHTML=tl.map(t=>`<option${t==p.tag?' selected':''}>${t}</option>`).join('');
- $('#stato').value=p.done?'1':'0';$('#del').style.display=nuovo?'none':'';
- const ph=$('#ph');ph.style.display='none';ph.removeAttribute('src');
- $('#sheet').style.display='block';
- if(p.photo){
-  try{if(!cache[p.photo])cache[p.photo]=URL.createObjectURL(await dl(cur.dir+'/foto/'+p.photo));if(pin===p){ph.src=cache[p.photo];ph.style.display='block'}}catch{}
- }
+function chips(){
+ const L=tags.some(t=>t.n==dr.tag)||!dr.tag?tags:[...tags,{n:dr.tag,c:'#888888'}];
+ $('#chips').innerHTML=L.map(t=>`<button class="chip${t.n==dr.tag?' on':''}" data-n="${t.n.replace(/"/g,'&quot;')}" style="border-color:${t.c};${t.n==dr.tag?'background:'+t.c:''}">${t.n}</button>`).join('');
 }
-function closeSheet(){$('#sheet').style.display='none';pin=null}
+$('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;dr.tag=b.dataset.n;chips();drawPins()};
+function stato(){const b=$('#stato');b.textContent=dr.done?'✓ Risolta':'Aperta';b.style.background=dr.done?'#5fd47a':'';b.style.color=dr.done?'#111':''}
+$('#stato').onclick=()=>{dr.done=!dr.done;stato();drawPins()};
+async function edit(p,nuovo){
+ pin=p;isNew=nuovo;photoBlob=null;dr={tag:p.tag||'',done:!!p.done};
+ $('#desc').value=p.desc||'';$('#desc').placeholder='Descrizione segnalazione '+p.n;
+ chips();stato();$('#del').style.display=nuovo?'none':'';
+ const ph=$('#ph');ph.style.display='none';ph.removeAttribute('src');
+ $('#sheet').style.display='block';drawPins();reveal();
+ if(p.photo){try{if(!cache[p.photo])cache[p.photo]=URL.createObjectURL(await dl(cur.dir+'/foto/'+p.photo));if(pin===p){ph.src=cache[p.photo];ph.style.display='block'}}catch{}}
+}
+function closeSheet(){$('#sheet').style.display='none';pin=null;if(data)drawPins()}
 $('#cancel').onclick=closeSheet;
 $('#bcam').onclick=()=>$('#fcam').click();
 $('#bgal').onclick=()=>$('#fgal').click();
@@ -225,15 +258,16 @@ const onFoto=async e=>{
  e.target.value='';
 };
 $('#fcam').onchange=$('#fgal').onchange=onFoto;
-async function saveData(){await up(cur.dir+'/dati.json',new Blob([JSON.stringify(data)],{type:'application/json'}));cur.d=data;cur.has=1}
+const saveData=async()=>{await jput(cur.dir+'/dati.json',data);cur.d=data;cur.has=1};
 $('#save').onclick=async()=>{
+ if(!dr.tag)return toast('Scegli una categoria');
  const p=pin,b=$('#save');b.disabled=true;b.textContent='Salvo…';
  const old={desc:p.desc,tag:p.tag,done:p.done,photo:p.photo};
- p.desc=$('#desc').value.trim();p.tag=$('#tag').value;p.done=$('#stato').value=='1';
+ p.desc=$('#desc').value.trim();p.tag=dr.tag;p.done=dr.done;
  try{
   if(photoBlob){p.photo=`${cur.k}_${p.n}_${Date.now()}.jpg`;await up(cur.dir+'/foto/'+p.photo,photoBlob);cache[p.photo]=URL.createObjectURL(photoBlob)}
   if(isNew)data.pins.push(p);
-  await saveData();closeSheet();drawPins();toast('Salvato');
+  await saveData();closeSheet();toast('Salvato');
  }catch{
   Object.assign(p,old);if(isNew)data.pins=data.pins.filter(x=>x!==p);
   toast('Errore: salvataggio non riuscito, riprova');
@@ -244,16 +278,20 @@ $('#del').onclick=async function(){
  if(!this.dataset.c){this.dataset.c=1;this.textContent='Confermi?';setTimeout(()=>{delete this.dataset.c;this.textContent='Elimina'},3000);return}
  delete this.dataset.c;this.textContent='Elimina';
  const keep=data.pins;data.pins=keep.filter(x=>x!==pin);
- try{await saveData();closeSheet();drawPins();toast('Eliminata')}catch{data.pins=keep;toast('Errore: non eliminata')}
+ try{await saveData();closeSheet();toast('Eliminata')}catch{data.pins=keep;toast('Errore: non eliminata')}
 };
 
 /* ---------- Impostazioni ---------- */
 $('#bref').onclick=()=>{if(T)start()};
-$('#btag').onclick=()=>{$('#tl').value=tags.join('\n');$('#tp').style.display='block'};
+$('#btag').onclick=()=>{$('#tl').value=tags.map(t=>t.n+' '+t.c).join('\n');$('#tp').style.display='block'};
 $('#tcancel').onclick=()=>$('#tp').style.display='none';
 $('#tsave').onclick=async()=>{
- const l=$('#tl').value.split(/[\n,]/).map(s=>s.trim()).filter(Boolean);if(!l.length)return toast('Inserisci almeno un tag');
- try{await up('/config.json',new Blob([JSON.stringify({tags:l})]));tags=l;$('#tp').style.display='none';toast('Tag salvati')}catch{toast('Errore nel salvataggio dei tag')}
+ const L=$('#tl').value.split('\n').map(s=>s.trim()).filter(Boolean).map(s=>{const m=s.match(/^(.*?)\s*(#[0-9a-fA-F]{6})$/);return m&&m[1]?{n:m[1],c:m[2]}:{n:s}});
+ if(!L.length)return toast('Inserisci almeno una categoria');
+ L.forEach(x=>{if(!x.c){const o=tags.find(t=>t.n==x.n);if(o)x.c=o.c}});
+ const used=new Set(L.map(x=>x.c));
+ L.forEach(x=>{if(!x.c){x.c=PAL.find(c=>!used.has(c))||'#888888';used.add(x.c)}});
+ try{await jput(CFG,{tags:L});tags=L;$('#tp').style.display='none';toast('Categorie salvate')}catch{toast('Errore nel salvataggio')}
 };
 $('#bout').onclick=function(){
  if(!this.dataset.c){this.dataset.c=1;this.textContent='Sicuro?';setTimeout(()=>{delete this.dataset.c;this.textContent='Esci'},3000);return}
@@ -266,9 +304,4 @@ async function start(){
  try{await load()}catch(e){$('#list').innerHTML='<div class="msg"><p>Impossibile leggere Dropbox. Controlla la connessione.</p><button class="btn" id="rt">Riprova</button></div>';$('#rt').onclick=start}
 }
 (async()=>{
- const q=new URLSearchParams(location.search),code=q.get('code'),er=q.get('error_description')||q.get('error');
- if(er){toast('Dropbox: '+er);history.replaceState(null,'',redirect)}
- if(code){try{await tok({grant_type:'authorization_code',code,code_verifier:LS.v,redirect_uri:redirect})}catch(e){toast('Accesso non riuscito: '+String(e.message).slice(0,120))}history.replaceState(null,'',redirect)}
- start();
-})();
-</script></body></html>
+ co
