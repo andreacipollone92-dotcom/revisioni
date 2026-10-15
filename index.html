@@ -19,6 +19,8 @@ h1{font-size:19px;margin:0;flex:1}
 .ind{min-width:30px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px;padding:0 6px}
 .ind.o{background:var(--red)}.ind.k{background:var(--grn)}
 .msg{padding:40px 20px;text-align:center;color:var(--mut)}
+.msg input{width:100%;max-width:420px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin:8px 0 12px}
+.msg small{display:block;margin-top:18px;word-break:break-all}
 #viewer{position:fixed;inset:0;background:#0d1114;z-index:10;display:none}
 #vbar{position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;display:flex;gap:8px;align-items:center;z-index:3;background:rgba(0,0,0,.6);color:#fff}
 #vbar b{flex:1;font-size:18px}
@@ -28,10 +30,10 @@ h1{font-size:19px;margin:0;flex:1}
 #plan{display:block;max-width:none;user-select:none;-webkit-user-drag:none;background:#fff}
 .pin{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;border:3px solid var(--red);background:#fff;color:#111;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;transform:scale(var(--k,1));box-shadow:0 1px 4px #0009}
 .pin.k{border-color:var(--grn)}
-#sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -6px 30px #0006;display:none;max-height:88%;overflow:auto}
-#sheet h2{font-size:17px;margin:0 0 4px}
-#sheet label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
-#sheet textarea,#sheet select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+#sheet,#tp{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -6px 30px #0006;display:none;max-height:88%;overflow:auto}
+#sheet h2,#tp h2{font-size:17px;margin:0 0 4px}
+#sheet label,#tp label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+#sheet textarea,#sheet select,#tp textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
 .two{display:flex;gap:8px}.two>div{flex:1}
 .acts{display:flex;gap:8px;margin-top:14px}.acts .btn{flex:1}
 #ph{max-width:100%;max-height:220px;border-radius:10px;margin-top:8px;display:none}
@@ -62,6 +64,7 @@ h1{font-size:19px;margin:0;flex:1}
  <img id="ph" alt="Foto segnalazione">
  <div class="acts"><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">Elimina</button><button class="btn" id="save">Salva</button></div>
 </div>
+<div id="tp"><h2>Tag</h2><label for="tl">Uno per riga</label><textarea id="tl" rows="8"></textarea><div class="acts"><button class="btn g" id="tcancel">Annulla</button><button class="btn" id="tsave">Salva</button></div></div>
 <div id="toast"></div>
 
 <script>
@@ -74,14 +77,17 @@ const toast=m=>{const e=$('#toast');e.textContent=m;e.style.display='block';clea
 /* ---------- Dropbox: accesso (OAuth PKCE, rinnovo automatico) ---------- */
 const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 async function login(){
- const key=LS.key||prompt('Incolla la App key della tua app Dropbox');if(!key)return;LS.key=key.trim();
+ const key=(($('#key')||{}).value||'').trim()||LS.key;
+ if(!key)return toast('Inserisci la App key di Dropbox');
+ if(!crypto.subtle)return toast('Serve una pagina https');
+ LS.key=key;
  const v=b64(crypto.getRandomValues(new Uint8Array(32)));LS.v=v;
  const c=b64(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
  location.href='https://www.dropbox.com/oauth2/authorize?'+new URLSearchParams({client_id:LS.key,response_type:'code',code_challenge:c,code_challenge_method:'S256',token_access_type:'offline',redirect_uri:redirect});
 }
 async function tok(body){
  const r=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',body:new URLSearchParams({client_id:LS.key,...body})});
- if(!r.ok)throw Error('auth');const j=await r.json();
+ if(!r.ok)throw Error(await r.text());const j=await r.json();
  T={a:j.access_token,r:j.refresh_token||(T&&T.r),e:Date.now()+j.expires_in*1000-60000};LS.t=JSON.stringify(T);
 }
 async function token(){if(!T)throw Error('no');if(Date.now()>T.e)await tok({grant_type:'refresh_token',refresh_token:T.r});return T.a}
@@ -231,29 +237,35 @@ $('#save').onclick=async()=>{
  }
  b.disabled=false;b.textContent='Salva';
 };
-$('#del').onclick=async()=>{
- if(!confirm('Eliminare la segnalazione '+pin.n+'?'))return;
+$('#del').onclick=async function(){
+ if(!this.dataset.c){this.dataset.c=1;this.textContent='Confermi?';setTimeout(()=>{delete this.dataset.c;this.textContent='Elimina'},3000);return}
+ delete this.dataset.c;this.textContent='Elimina';
  const keep=data.pins;data.pins=keep.filter(x=>x!==pin);
  try{await saveData();closeSheet();drawPins();toast('Eliminata')}catch{data.pins=keep;toast('Errore: non eliminata')}
 };
 
 /* ---------- Impostazioni ---------- */
 $('#bref').onclick=()=>{if(T)start()};
-$('#btag').onclick=async()=>{
- const v=prompt('Tag separati da virgola:',tags.join(', '));if(v===null)return;
- const l=v.split(',').map(s=>s.trim()).filter(Boolean);if(!l.length)return;
- try{await up('/config.json',new Blob([JSON.stringify({tags:l})]));tags=l;toast('Tag salvati')}catch{toast('Errore nel salvataggio dei tag')}
+$('#btag').onclick=()=>{$('#tl').value=tags.join('\n');$('#tp').style.display='block'};
+$('#tcancel').onclick=()=>$('#tp').style.display='none';
+$('#tsave').onclick=async()=>{
+ const l=$('#tl').value.split(/[\n,]/).map(s=>s.trim()).filter(Boolean);if(!l.length)return toast('Inserisci almeno un tag');
+ try{await up('/config.json',new Blob([JSON.stringify({tags:l})]));tags=l;$('#tp').style.display='none';toast('Tag salvati')}catch{toast('Errore nel salvataggio dei tag')}
 };
-$('#bout').onclick=()=>{if(confirm('Scollegare Dropbox da questo dispositivo?')){delete LS.t;T=null;location.reload()}};
+$('#bout').onclick=function(){
+ if(!this.dataset.c){this.dataset.c=1;this.textContent='Sicuro?';setTimeout(()=>{delete this.dataset.c;this.textContent='Esci'},3000);return}
+ delete LS.t;T=null;location.reload();
+};
 
 /* ---------- Avvio ---------- */
 async function start(){
- if(!T){$('#list').innerHTML='<div class="msg"><p>Collega il tuo Dropbox per iniziare.</p><button class="btn" id="lg">Collega Dropbox</button></div>';$('#lg').onclick=login;return}
+ if(!T){$('#list').innerHTML=`<div class="msg"><p>Collega il tuo Dropbox per iniziare.</p><input id="key" placeholder="App key di Dropbox" autocomplete="off" value="${LS.key||''}"><br><button class="btn" id="lg">Collega Dropbox</button><small>Redirect URI da registrare su Dropbox (deve coincidere):<br><b>${redirect}</b></small></div>`;$('#lg').onclick=login;return}
  try{await load()}catch(e){$('#list').innerHTML='<div class="msg"><p>Impossibile leggere Dropbox. Controlla la connessione.</p><button class="btn" id="rt">Riprova</button></div>';$('#rt').onclick=start}
 }
 (async()=>{
- const code=new URLSearchParams(location.search).get('code');
- if(code){try{await tok({grant_type:'authorization_code',code,code_verifier:LS.v,redirect_uri:redirect})}catch{toast('Accesso a Dropbox non riuscito')}history.replaceState(null,'',redirect)}
+ const q=new URLSearchParams(location.search),code=q.get('code'),er=q.get('error_description')||q.get('error');
+ if(er){toast('Dropbox: '+er);history.replaceState(null,'',redirect)}
+ if(code){try{await tok({grant_type:'authorization_code',code,code_verifier:LS.v,redirect_uri:redirect})}catch(e){toast('Accesso non riuscito: '+String(e.message).slice(0,120))}history.replaceState(null,'',redirect)}
  start();
 })();
 </script></body></html>
