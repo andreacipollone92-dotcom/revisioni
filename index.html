@@ -14,7 +14,7 @@ h1{font-size:22px;margin:0;flex:1;letter-spacing:.3px}
 .btn{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:11px 14px;cursor:pointer}
 .btn.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .btn.d{background:var(--red);color:#fff}
-#list{padding:6px 12px 50px;max-width:680px;margin:0 auto}
+#list{padding:6px 12px 50px}
 .sum{display:flex;gap:6px;align-items:baseline;padding:14px 4px 2px;color:var(--mut);font-size:16px}
 .sum .big{font-size:30px;font-weight:800;color:var(--red)}.sum .big.g{color:var(--grn);margin-left:8px}
 .fl{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}
@@ -68,19 +68,24 @@ h1{font-size:22px;margin:0;flex:1;letter-spacing:.3px}
 #pgrid{background:var(--card);padding:14px;border-radius:14px;display:grid;grid-template-columns:repeat(6,1fr);gap:10px;width:min(92vw,380px)}
 #pgrid .sw{width:100%;height:44px}
 html,body{touch-action:pan-x pan-y}
-header{flex-wrap:wrap}h1{flex:1 1 100%}#uim{margin-left:auto}.hb{min-width:44px}
+header{flex-wrap:wrap}h1{flex:1 1 100%}.hb{min-width:44px}
 #plan{pointer-events:none;-webkit-touch-callout:none}
 #stage,#layer,.pin{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+header{justify-content:space-between}.hg{display:flex;gap:8px}.hb{padding:10px 12px}
+.pin::after{content:attr(data-n)}
+#vbar .btn{padding:8px 11px}
 </style></head><body>
+<div id="app">
 <header><h1>EURORA LIVING</h1>
-<button class="hb" id="bref" title="Aggiorna">⟳</button>
-<button class="hb" id="btag">Categorie</button>
-<button class="hb" id="bout">Esci</button><button class="hb" id="uim">−</button><button class="hb" id="uip">+</button></header>
+<button class="hb" id="bout">Esci</button>
+<div class="hg"><button class="hb" id="uim">−</button><button class="hb" id="uip">+</button></div>
+<div class="hg"><button class="hb" id="btag">Categorie</button><button class="hb" id="bref" title="Aggiorna">⟳</button></div></header>
 <div id="list"></div>
+</div>
 
 <div id="viewer">
  <div id="vbar"><button class="btn" id="vback">←</button><b id="vt"></b>
- <button class="btn" id="zo">−</button><button class="btn" id="zf">Adatta</button><button class="btn" id="zi">+</button></div>
+ <button class="btn" id="zo">−</button><button class="btn" id="zf">⤢</button><button class="btn" id="zi">+</button><button class="btn" id="pm">○</button><button class="btn" id="pp">●</button></div>
  <div id="stage"><div id="layer"><img id="plan" alt="Pianta" draggable="false"></div></div>
 </div>
 
@@ -109,8 +114,9 @@ const toast=m=>{const e=$('#toast');e.textContent=m;e.style.display='block';clea
 const tagColor=n=>(tags.find(t=>t.n==n)||{}).c;
 
 /* ---------- Scala interfaccia (solo elenco) ---------- */
+let pz=parseFloat(LS.pz)||1;
 let ui=parseFloat(LS.ui)||(innerWidth<600?1.3:1);
-const setUi=v=>{ui=Math.min(2,Math.max(.7,Math.round(v*10)/10));LS.ui=ui;const l=$('#list');l.style.zoom=ui;l.style.width=(100/ui)+'%'};
+const setUi=v=>{ui=Math.min(2,Math.max(.7,Math.round(v*10)/10));LS.ui=ui;const l=$('#app');l.style.zoom=ui;l.style.width=(100/ui)+'%'};
 $('#uim').onclick=()=>setUi(ui-.1);$('#uip').onclick=()=>setUi(ui+.1);setUi(ui);
 
 /* ---------- Dropbox: accesso ---------- */
@@ -199,7 +205,7 @@ $('#list').onclick=e=>{
 };
 
 /* ---------- Pianta ---------- */
-function apply(){const l=$('#layer');l.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`;l.style.setProperty('--k',1/view.s)}
+function apply(){const l=$('#layer');l.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`;l.style.setProperty('--k',pz/view.s)}
 function fit(){
  const st=$('#stage'),im=$('#plan'),s=st.clientWidth/im.naturalWidth;
  view={s,x:0,y:$('#vbar').offsetHeight};apply();
@@ -218,7 +224,7 @@ function drawPins(){
  const a=[...data.pins];if(pin&&isNew)a.push(pin);
  for(const p of a){
   const me=p===pin,t=me?dr.tag:p.tag,d=me?dr.done:p.done;
-  const e=document.createElement('div');e.className='pin';e.dataset.id=p.id;e.textContent=p.n;
+  const e=document.createElement('div');e.className='pin';e.dataset.id=p.id;e.dataset.n=p.n;
   e.style.left=p.x*100+'%';e.style.top=p.y*100+'%';
   if(!t){e.style.background='#f4ff2e';e.style.borderColor='#222'}
   else{const c=tagColor(t);e.style.borderColor=c||'#888';if(!c)e.style.borderStyle='dashed';e.style.background=d?'#5fd47a':'#fff'}
@@ -237,6 +243,8 @@ $('#vback').onclick=closeViewer;
 $('#zi').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1.4);
 $('#zo').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1/1.4);
 $('#zf').onclick=fit;
+const setPz=v=>{pz=Math.min(2.5,Math.max(.5,Math.round(v*10)/10));LS.pz=pz;apply()};
+$('#pm').onclick=()=>setPz(pz-.2);$('#pp').onclick=()=>setPz(pz+.2);
 
 const P=new Map(),stg=$('#stage');let g=null;
 $('#viewer').oncontextmenu=e=>e.preventDefault();
