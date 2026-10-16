@@ -77,6 +77,9 @@ header{justify-content:space-between}.hg{display:flex;gap:8px}.hb{padding:10px 1
 #vbar{flex-wrap:wrap;justify-content:space-between}.vg{display:flex;gap:8px;align-items:center}#vbar b{flex:none}
 #sp{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(92vw,360px);z-index:20;background:var(--card);border-radius:16px;padding:16px;display:none;box-shadow:0 0 0 100vmax #000a}
 #sp h2{font-size:18px;margin:0 0 4px}.sr{display:flex;align-items:center;gap:10px;margin:14px 0}.sr b{flex:1}.sr span{min-width:56px;text-align:center;font-weight:700}
+#app,#vbar,#sheet,#tp,#sp{zoom:var(--z,1)}
+#tp{width:min(calc(92vw / var(--z,1)),420px);max-height:calc(80vh / var(--z,1))}
+#sp{width:min(calc(92vw / var(--z,1)),360px)}
 </style></head><body>
 <div id="app">
 <header><h1>EURORA LIVING</h1>
@@ -102,7 +105,6 @@ header{justify-content:space-between}.hg{display:flex;gap:8px}.hb{padding:10px 1
 <div id="tp"><h2>Categorie</h2><div id="tlist"></div><button class="btn g" id="tadd">+ Aggiungi categoria</button><div class="acts"><button class="btn g" id="tcancel">Annulla</button><button class="btn" id="tsave">Salva</button></div></div>
 <div id="sp"><h2>Impostazioni</h2>
 <div class="sr"><b>Grafica</b><button class="btn g sb" id="uim">−</button><span id="uv"></span><button class="btn g sb" id="uip">+</button></div>
-<div class="sr"><b>Pallini</b><button class="btn g sb" id="pm2">−</button><span id="pv"></span><button class="btn g sb" id="pp2">+</button></div>
 <div class="acts"><button class="btn" id="sclose">Chiudi</button></div></div>
 <div id="pal"><div id="pgrid"></div></div>
 <div id="toast"></div>
@@ -122,15 +124,13 @@ const tagColor=n=>(tags.find(t=>t.n==n)||{}).c;
 /* ---------- Scala interfaccia (solo elenco) ---------- */
 let pz=parseFloat(LS.pz)||1;
 let ui=parseFloat(LS.ui)||(innerWidth<600?1.3:1);
-const vp=document.querySelector('meta[name=viewport]'),touch=navigator.maxTouchPoints>0;
 const setUi=v=>{
  ui=Math.min(2,Math.max(.7,Math.round(v*10)/10));LS.ui=ui;$('#uv').textContent=Math.round(ui*100)+'%';
- if(touch)vp.setAttribute('content','width='+Math.round(screen.width/ui)+',user-scalable=no,viewport-fit=cover');
- else document.documentElement.style.zoom=ui;
+ document.documentElement.style.setProperty('--z',ui);
 };
 $('#uim').onclick=()=>setUi(ui-.1);$('#uip').onclick=()=>setUi(ui+.1);
 $('#bset').onclick=()=>$('#sp').style.display='block';$('#sclose').onclick=()=>$('#sp').style.display='none';
-addEventListener('orientationchange',()=>setTimeout(()=>setUi(ui),400));setUi(ui);
+setUi(ui);
 
 /* ---------- Dropbox: accesso ---------- */
 const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
@@ -221,7 +221,7 @@ $('#list').onclick=e=>{
 function apply(){const l=$('#layer');l.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`;l.style.setProperty('--k',pz/view.s)}
 function fit(){
  const st=$('#stage'),im=$('#plan'),s=st.clientWidth/im.naturalWidth;
- view={s,x:0,y:$('#vbar').offsetHeight};apply();
+ view={s,x:0,y:$('#vbar').getBoundingClientRect().height};apply();
 }
 function zoomAt(cx,cy,f){
  const s=Math.min(Math.max(view.s*f,.05),12);f=s/view.s;
@@ -229,7 +229,7 @@ function zoomAt(cx,cy,f){
 }
 function reveal(){
  if(!pin)return;const im=$('#plan');
- const sy=view.y+pin.y*im.naturalHeight*view.s,hi=innerHeight-$('#sheet').offsetHeight-40,lo=90;
+ const sy=view.y+pin.y*im.naturalHeight*view.s,hi=innerHeight-$('#sheet').getBoundingClientRect().height-40,lo=90;
  if(sy>hi)view.y-=sy-hi;else if(sy<lo)view.y+=lo-sy;apply();
 }
 function drawPins(){
@@ -256,9 +256,8 @@ $('#vback').onclick=closeViewer;
 $('#zi').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1.4);
 $('#zo').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1/1.4);
 $('#zf').onclick=fit;
-const setPz=v=>{pz=Math.min(2.5,Math.max(.5,Math.round(v*10)/10));LS.pz=pz;$('#pv').textContent=Math.round(pz*100)+'%';apply()};
-$('#pm').onclick=$('#pm2').onclick=()=>setPz(pz-.2);$('#pp').onclick=$('#pp2').onclick=()=>setPz(pz+.2);
-$('#pv').textContent=Math.round(pz*100)+'%';
+const setPz=v=>{pz=Math.min(2.5,Math.max(.5,Math.round(v*10)/10));LS.pz=pz;apply()};
+$('#pm').onclick=()=>setPz(pz-.2);$('#pp').onclick=()=>setPz(pz+.2);
 
 const P=new Map(),stg=$('#stage');let g=null;
 $('#viewer').oncontextmenu=e=>e.preventDefault();
