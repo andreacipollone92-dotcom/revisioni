@@ -77,6 +77,20 @@ header{justify-content:space-between}.hg{display:flex;gap:calc(8px*var(--z))}.hb
 #vbar{flex-wrap:wrap;justify-content:space-between}.vg{display:flex;gap:calc(8px*var(--z));align-items:center}#vbar b{flex:none}
 #sp{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(92vw,calc(360px*var(--z)));z-index:20;background:var(--card);border-radius:calc(16px*var(--z));padding:calc(16px*var(--z));display:none;box-shadow:0 0 0 100vmax #000a}
 #sp h2{font-size:calc(18px*var(--z));margin:0 0 calc(4px*var(--z))}.sr{display:flex;align-items:center;gap:calc(10px*var(--z));margin:calc(14px*var(--z)) 0}.sr b{flex:1}.sr span{min-width:calc(56px*var(--z));text-align:center;font-weight:700}
+input{font:inherit}
+#vbar{display:block}
+.vr{display:flex;justify-content:space-between;align-items:center;gap:calc(8px*var(--z))}
+#vt{text-align:center;font-weight:800;font-size:calc(19px*var(--z));letter-spacing:calc(.6px*var(--z));padding:calc(8px*var(--z)) 0 calc(2px*var(--z))}
+#sheet{height:50%;flex-direction:column;gap:calc(10px*var(--z));overflow-y:auto}
+#sheet textarea{flex:none}
+#chips{flex-wrap:wrap;overflow:visible;padding:0}
+.fb{display:flex;gap:calc(10px*var(--z));align-items:stretch;flex:none}
+#phw{width:calc(130px*var(--z));height:calc(100px*var(--z));flex:none;border-radius:calc(10px*var(--z));background:var(--bg);border:calc(1px*var(--z)) solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--mut);font-size:calc(13px*var(--z));text-align:center}
+#ph{width:100%;height:100%;object-fit:cover;border-radius:0}
+.fbb{display:flex;flex-direction:column;gap:calc(8px*var(--z));flex:1;justify-content:center}.fbb .btn{width:100%}
+#sheet .acts{margin-top:auto}
+#big{position:fixed;inset:0;z-index:50;background:#000d;display:none;align-items:center;justify-content:center}
+#big img{max-width:96%;max-height:96%;border-radius:calc(8px*var(--z))}
 </style></head><body>
 <div id="app">
 <header><h1>EURORA LIVING</h1>
@@ -87,23 +101,24 @@ header{justify-content:space-between}.hg{display:flex;gap:calc(8px*var(--z))}.hb
 </div>
 
 <div id="viewer">
- <div id="vbar"><div class="vg"><button class="btn" id="vback">←</button><b id="vt"></b></div><div class="vg"><button class="btn" id="zo">−</button><button class="btn" id="zf">Adatta</button><button class="btn" id="zi">+</button></div><div class="vg"><button class="btn" id="pm">○</button><button class="btn" id="pp">●</button></div></div>
+ <div id="vbar"><div class="vr"><button class="btn" id="vback">‹ Elenco</button><div class="vg"><button class="btn" id="zo">−</button><button class="btn" id="zf">Adatta</button><button class="btn" id="zi">+</button></div><div class="vg"><button class="btn" id="pm">○</button><button class="btn" id="pp">●</button></div></div><div id="vt"></div></div>
  <div id="stage"><div id="layer"><img id="plan" alt="Pianta" draggable="false"></div></div>
 </div>
 
 <div id="sheet">
- <textarea id="desc" rows="2"></textarea>
+ <textarea id="desc" rows="4"></textarea>
  <div id="chips"></div>
- <img id="ph" alt="Foto">
+ <div class="fb"><div id="phw"><img id="ph" alt="Foto"><span id="phe">Nessuna foto</span></div><div class="fbb"><button class="btn g" id="bcam">📷 Scatta</button><button class="btn g" id="bgal">🖼 Galleria</button></div></div>
  <input type="file" id="fcam" accept="image/*" capture="environment" hidden>
  <input type="file" id="fgal" accept="image/*" hidden>
- <div class="acts"><button class="btn g" id="stato">Aperta</button><button class="btn g" id="bcam">📷</button><button class="btn g" id="bgal">🖼</button><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">🗑</button><button class="btn" id="save">Salva</button></div>
+ <div class="acts"><button class="btn" id="stato">Aperta</button><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">🗑</button><button class="btn" id="save">Salva</button></div>
 </div>
 <div id="tp"><h2>Categorie</h2><div id="tlist"></div><button class="btn g" id="tadd">+ Aggiungi categoria</button><div class="acts"><button class="btn g" id="tcancel">Annulla</button><button class="btn" id="tsave">Salva</button></div></div>
 <div id="sp"><h2>Impostazioni</h2>
 <div class="sr"><b>Grafica</b><button class="btn g sb" id="uim">−</button><span id="uv"></span><button class="btn g sb" id="uip">+</button></div>
 <div class="acts"><button class="btn" id="sclose">Chiudi</button></div></div>
 <div id="pal"><div id="pgrid"></div></div>
+<div id="big"><img id="bigi" alt="Foto"></div>
 <div id="toast"></div>
 
 <script>
@@ -226,7 +241,7 @@ function zoomAt(cx,cy,f){
 }
 function reveal(){
  if(!pin)return;const im=$('#plan');
- const sy=view.y+pin.y*im.naturalHeight*view.s,hi=innerHeight-$('#sheet').getBoundingClientRect().height-40,lo=90;
+ const sy=view.y+pin.y*im.naturalHeight*view.s,hi=innerHeight-$('#sheet').getBoundingClientRect().height-40,lo=$('#vbar').getBoundingClientRect().height+30;
  if(sy>hi)view.y-=sy-hi;else if(sy<lo)view.y+=lo-sy;apply();
 }
 function drawPins(){
@@ -244,7 +259,7 @@ function drawPins(){
 async function openInt(k){
  const i=interni[k];if(!i.plan)return toast('Manca la pianta JPEG nella cartella '+k);
  cur=i;data=i.d||{pins:[]};data.pins=data.pins||[];pin=null;
- $('#vt').textContent=k;$('#viewer').style.display='block';
+ $('#vt').textContent=(i.b+' › '+i.f+' › '+i.k).toUpperCase();$('#viewer').style.display='block';
  const im=$('#plan');im.onload=()=>{fit();drawPins()};
  try{if(!i.url)i.url=URL.createObjectURL(await dl(i.plan));im.src=i.url}catch{toast('Pianta non scaricata');closeViewer()}
 }
@@ -304,18 +319,21 @@ function chips(){
  $('#chips').innerHTML=L.map(t=>`<button class="chip${t.n==dr.tag?' on':''}" data-n="${t.n.replace(/"/g,'&quot;')}" style="border-color:${t.c};${t.n==dr.tag?'background:'+t.c:''}">${t.n}</button>`).join('');
 }
 $('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;dr.tag=b.dataset.n;chips();drawPins()};
-function stato(){const b=$('#stato');b.textContent=dr.done?'✓ Risolta':'Aperta';b.style.background=dr.done?'#5fd47a':'';b.style.color=dr.done?'#111':''}
+function stato(){const b=$('#stato');b.textContent=dr.done?'✓ Risolta':'Aperta';b.style.background=dr.done?'#5fd47a':'#f59e0b';b.style.color='#111'}
 $('#stato').onclick=()=>{dr.done=!dr.done;stato();drawPins()};
 async function edit(p,nuovo){
  pin=p;isNew=nuovo;photoBlob=null;dr={tag:tagColor(p.tag)?p.tag:'',done:!!p.done};
  $('#desc').value=p.desc||'';$('#desc').placeholder='Descrizione segnalazione '+p.n;
  chips();stato();$('#del').style.display=nuovo?'none':'';
- const ph=$('#ph');ph.style.display='none';ph.removeAttribute('src');
- $('#sheet').style.display='block';drawPins();reveal();
- if(p.photo){try{if(!cache[p.photo])cache[p.photo]=URL.createObjectURL(await dl(cur.dir+'/foto/'+p.photo));if(pin===p){ph.src=cache[p.photo];ph.style.display='block'}}catch{}}
+ showPh('');
+ $('#sheet').style.display='flex';drawPins();reveal();
+ if(p.photo){try{if(!cache[p.photo])cache[p.photo]=URL.createObjectURL(await dl(cur.dir+'/foto/'+p.photo));if(pin===p)showPh(cache[p.photo])}catch{}}
 }
 function closeSheet(){$('#sheet').style.display='none';pin=null;if(data)drawPins()}
 $('#cancel').onclick=closeSheet;
+function showPh(u){const ph=$('#ph');if(u){ph.src=u;ph.style.display='block';$('#phe').style.display='none'}else{ph.removeAttribute('src');ph.style.display='none';$('#phe').style.display=''}}
+$('#phw').onclick=()=>{const u=$('#ph').getAttribute('src');if(!u)return;$('#bigi').src=u;$('#big').style.display='flex'};
+$('#big').onclick=()=>$('#big').style.display='none';
 $('#bcam').onclick=()=>$('#fcam').click();
 $('#bgal').onclick=()=>$('#fgal').click();
 async function shrink(f){
@@ -325,7 +343,7 @@ async function shrink(f){
 }
 const onFoto=async e=>{
  const f=e.target.files[0];if(!f)return;
- try{photoBlob=await shrink(f);$('#ph').src=URL.createObjectURL(photoBlob);$('#ph').style.display='block'}catch{toast('Foto non leggibile')}
+ try{photoBlob=await shrink(f);showPh(URL.createObjectURL(photoBlob))}catch{toast('Foto non leggibile')}
  e.target.value='';
 };
 $('#fcam').onchange=$('#fgal').onchange=onFoto;
