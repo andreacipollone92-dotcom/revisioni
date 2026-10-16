@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="it"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>EURORA LIVING</title>
 <style>
 :root{--bg:#e9edf1;--card:#fff;--ink:#101c26;--mut:#5d6b78;--acc:#0b5f8a;--red:#d62828;--grn:#1f9d4a;--line:#d3dae0}
@@ -67,11 +67,15 @@ h1{font-size:22px;margin:0;flex:1;letter-spacing:.3px}
 #pal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#000a}
 #pgrid{background:var(--card);padding:14px;border-radius:14px;display:grid;grid-template-columns:repeat(6,1fr);gap:10px;width:min(92vw,380px)}
 #pgrid .sw{width:100%;height:44px}
+html,body{touch-action:pan-x pan-y}
+header{flex-wrap:wrap}h1{flex:1 1 100%}#uim{margin-left:auto}.hb{min-width:44px}
+#plan{pointer-events:none;-webkit-touch-callout:none}
+#stage,#layer,.pin{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 </style></head><body>
 <header><h1>EURORA LIVING</h1>
 <button class="hb" id="bref" title="Aggiorna">⟳</button>
 <button class="hb" id="btag">Categorie</button>
-<button class="hb" id="bout">Esci</button></header>
+<button class="hb" id="bout">Esci</button><button class="hb" id="uim">−</button><button class="hb" id="uip">+</button></header>
 <div id="list"></div>
 
 <div id="viewer">
@@ -103,6 +107,11 @@ let T=JSON.parse(LS.t||'null'),interni={},tags=DEF,cur=null,data=null,view={x:0,
 const cache={},openF=new Set(),redirect=location.origin+location.pathname;
 const toast=m=>{const e=$('#toast');e.textContent=m;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2600)};
 const tagColor=n=>(tags.find(t=>t.n==n)||{}).c;
+
+/* ---------- Scala interfaccia (solo elenco) ---------- */
+let ui=parseFloat(LS.ui)||(innerWidth<600?1.3:1);
+const setUi=v=>{ui=Math.min(2,Math.max(.7,Math.round(v*10)/10));LS.ui=ui;const l=$('#list');l.style.zoom=ui;l.style.width=(100/ui)+'%'};
+$('#uim').onclick=()=>setUi(ui-.1);$('#uip').onclick=()=>setUi(ui+.1);setUi(ui);
 
 /* ---------- Dropbox: accesso ---------- */
 const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
@@ -212,7 +221,7 @@ function drawPins(){
   const e=document.createElement('div');e.className='pin';e.dataset.id=p.id;e.textContent=p.n;
   e.style.left=p.x*100+'%';e.style.top=p.y*100+'%';
   if(!t){e.style.background='#f4ff2e';e.style.borderColor='#222'}
-  else{e.style.borderColor=tagColor(t)||'#222';e.style.background=d?'#5fd47a':'#fff'}
+  else{const c=tagColor(t);e.style.borderColor=c||'#888';if(!c)e.style.borderStyle='dashed';e.style.background=d?'#5fd47a':'#fff'}
   L.appendChild(e);
  }
 }
@@ -230,6 +239,8 @@ $('#zo').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1/1.4);
 $('#zf').onclick=fit;
 
 const P=new Map(),stg=$('#stage');let g=null;
+$('#viewer').oncontextmenu=e=>e.preventDefault();
+document.addEventListener('gesturestart',e=>e.preventDefault());
 const pts=()=>[...P.values()],dist=()=>{const[a,b]=pts();return Math.hypot(a[0]-b[0],a[1]-b[1])},mid=()=>{const[a,b]=pts();return[(a[0]+b[0])/2,(a[1]+b[1])/2]};
 stg.onpointerdown=e=>{
  stg.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
@@ -278,7 +289,7 @@ $('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;dr.tag=b.
 function stato(){const b=$('#stato');b.textContent=dr.done?'✓ Risolta':'Aperta';b.style.background=dr.done?'#5fd47a':'';b.style.color=dr.done?'#111':''}
 $('#stato').onclick=()=>{dr.done=!dr.done;stato();drawPins()};
 async function edit(p,nuovo){
- pin=p;isNew=nuovo;photoBlob=null;dr={tag:p.tag||'',done:!!p.done};
+ pin=p;isNew=nuovo;photoBlob=null;dr={tag:tagColor(p.tag)?p.tag:'',done:!!p.done};
  $('#desc').value=p.desc||'';$('#desc').placeholder='Descrizione segnalazione '+p.n;
  chips();stato();$('#del').style.display=nuovo?'none':'';
  const ph=$('#ph');ph.style.display='none';ph.removeAttribute('src');
@@ -339,12 +350,16 @@ $('#tlist').onclick=e=>{
 };
 $('#pgrid').innerHTML=COL.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');
 $('#pal').onclick=e=>{const b=e.target.closest('[data-c]');if(b){td[ti].c=b.dataset.c;trender()}$('#pal').style.display='none'};
-$('#btag').onclick=()=>{td=tags.map(t=>({...t,o:1}));trender();$('#tp').style.display='block'};
+$('#btag').onclick=()=>{td=tags.map(t=>({...t,o:1}));trender();delete $('#tsave').dataset.w;$('#tsave').textContent='Salva';$('#tp').style.display='block'};
 $('#tadd').onclick=()=>{const u=new Set(td.map(t=>t.c));td.push({n:'',c:PAL.find(c=>!u.has(c))||'#888888'});trender();const i=$('#tlist').querySelectorAll('input');i[i.length-1].focus()};
 $('#tcancel').onclick=()=>$('#tp').style.display='none';
-$('#tsave').onclick=async()=>{
+$('#tsave').onclick=async function(){
  const L=td.map(t=>({n:t.n.trim(),c:t.c})).filter(t=>t.n);
  if(!L.length)return toast('Inserisci almeno una categoria');
+ const nm=new Set(L.map(t=>t.n)),gone=new Set(tags.filter(t=>!nm.has(t.n)).map(t=>t.n));
+ let n=0;Object.values(interni).forEach(i=>((i.d&&i.d.pins)||[]).forEach(q=>{if(gone.has(q.tag))n++}));
+ if(n&&!this.dataset.w){this.dataset.w=1;this.textContent='Conferma';return toast(n+' segnalazioni usano categorie eliminate e resteranno senza categoria. Tocca Conferma per procedere.')}
+ delete this.dataset.w;this.textContent='Salva';
  try{await jput(CFG,{tags:L});tags=L;$('#tp').style.display='none';toast('Categorie salvate')}catch{toast('Errore nel salvataggio')}
 };
 $('#bout').onclick=function(){
