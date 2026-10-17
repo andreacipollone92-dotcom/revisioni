@@ -99,6 +99,17 @@ input{font:inherit}
 .fbb{flex:1 1 calc(56px*var(--z));min-width:calc(56px*var(--z))}
 .fbb .btn{white-space:nowrap;overflow:hidden;padding-left:0;padding-right:0}
 .fbb.nar .tx{display:none}
+.sc{cursor:pointer}.sc em{display:block;font-style:normal;font-size:calc(12px*var(--z));color:var(--acc);margin-top:calc(2px*var(--z))}
+#rp{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(94vw,calc(470px*var(--z)));max-height:90vh;overflow:auto;z-index:25;background:var(--card);border-radius:calc(16px*var(--z));padding:calc(14px*var(--z));display:none;box-shadow:0 0 0 100vmax #000a}
+#rp h2{font-size:calc(18px*var(--z));margin:0 0 calc(4px*var(--z))}.rl{display:block;font-size:calc(13px*var(--z));color:var(--mut);margin:calc(10px*var(--z)) 0 calc(4px*var(--z))}
+.cat{display:flex;align-items:center;gap:calc(8px*var(--z));padding:calc(5px*var(--z)) calc(4px*var(--z))}.sq{width:calc(14px*var(--z));height:calc(14px*var(--z));border-radius:calc(4px*var(--z));flex:none}
+#rcats{display:flex;flex-wrap:wrap;gap:calc(2px*var(--z)) calc(14px*var(--z))}
+#rtree{max-height:34vh;overflow:auto;border:calc(1px*var(--z)) solid var(--line);border-radius:calc(10px*var(--z));padding:calc(4px*var(--z))}
+.tr2{display:flex;align-items:center;gap:calc(8px*var(--z));padding:calc(6px*var(--z)) calc(4px*var(--z))}.tr2.l1{padding-left:calc(22px*var(--z))}.tr2.l2{padding-left:calc(44px*var(--z))}.tr2.z{opacity:.45}
+.tr2 label{flex:1}.tr2 b{min-width:calc(28px*var(--z));text-align:right}.ex{width:calc(20px*var(--z));text-align:center;cursor:pointer;color:var(--mut)}
+#rp input[type=checkbox]{width:calc(20px*var(--z));height:calc(20px*var(--z));flex:none}
+#rsum{margin:calc(10px*var(--z)) 0 calc(2px*var(--z));font-weight:700}#rpg{min-height:1.3em;color:var(--mut);font-size:calc(14px*var(--z))}
+#rgo:disabled{opacity:.4}
 </style></head><body>
 <div id="app">
 <header><h1 id="ttl"></h1>
@@ -127,6 +138,12 @@ input{font:inherit}
 <div class="sr"><b>Grafica</b><button class="btn g sb" id="uim">−</button><span id="uv"></span><button class="btn g sb" id="uip">+</button></div>
 <div class="acts"><button class="btn" id="sclose">Chiudi</button></div></div>
 <div id="pal"><div id="pgrid"></div></div>
+<div id="rp"><h2 id="rpt"></h2>
+<label class="rl">Categorie</label><div id="rcats"></div>
+<label class="rl">Ambito</label><div id="rtree"></div>
+<label class="cat"><input type="checkbox" id="rcmp" checked> Compatto (più interni per pagina)</label>
+<div id="rsum"></div><div id="rpg"></div>
+<div class="acts"><button class="btn g" id="rcancel">Annulla</button><button class="btn" id="rgo">Crea report</button></div></div>
 <div id="big"><img id="bigi" alt="Foto"></div>
 <div id="toast"></div>
 
@@ -238,9 +255,10 @@ function render(){
   }
   h+='</div>';
  }
- $('#list').innerHTML=`<div class="sums"><div class="sc"><small>Attività aperte:</small><span class="big" style="color:var(--red)">${all[0]}</span></div><div class="sc"><small>Attività chiuse:</small><span class="big" style="color:var(--grn)">${all[1]}</span></div></div>`+h;
+ $('#list').innerHTML=`<div class="sums"><div class="sc" data-st="open" data-n="${all[0]}"><small>Attività aperte:</small><span class="big" style="color:var(--red)">${all[0]}</span>${all[0]?'<em>Tocca per il report</em>':''}</div><div class="sc" data-st="closed" data-n="${all[1]}"><small>Attività chiuse:</small><span class="big" style="color:var(--grn)">${all[1]}</span>${all[1]?'<em>Tocca per il report</em>':''}</div></div>`+h;
 }
 $('#list').onclick=e=>{
+ const c=e.target.closest('.sc');if(c){if(+c.dataset.n>0)openReport(c.dataset.st);return}
  const h=e.target.closest('.eh,.fh');
  if(h){const f=h.dataset.f;openF.has(f)?openF.delete(f):openF.add(f);return render()}
  const r=e.target.closest('.row');if(r)openInt(r.dataset.k);
@@ -392,6 +410,143 @@ $('#del').onclick=async function(){
  const keep=data.pins;data.pins=keep.filter(x=>x!==pin);
  try{await saveData();closeSheet();toast('Eliminata')}catch{data.pins=keep;toast('Errore: non eliminata')}
 };
+
+/* ---------- Report PDF ---------- */
+let R={};
+const rcount=i=>((i.d&&i.d.pins)||[]).filter(x=>R.cats.has(x.tag)&&!!x.done===(R.st=='closed'));
+const rgrp=k=>{const[b,f]=k.split('/');return Object.values(interni).filter(i=>i.b==b&&(f===undefined||i.f==f))};
+function openReport(st){
+ R={st,cats:new Set(tags.map(t=>t.n)),sel:new Set(),ob:new Set()};
+ $('#rpt').textContent='Report attività '+(st=='open'?'aperte':'chiuse');
+ $('#rcats').innerHTML='<label class="cat"><input type="checkbox" id="rall" checked><b>Tutte</b></label>'+tags.map((t,i)=>`<label class="cat"><input type="checkbox" data-c="${i}" checked><span class="sq" style="background:${t.c}"></span>${t.n}</label>`).join('');
+ $('#rpg').textContent='';rview();$('#rp').style.display='block';
+}
+$('#rcats').onchange=e=>{
+ if(e.target.id=='rall')R.cats=e.target.checked?new Set(tags.map(t=>t.n)):new Set();
+ else{const n=tags[e.target.dataset.c].n;e.target.checked?R.cats.add(n):R.cats.delete(n)}
+ $('#rcats').querySelectorAll('[data-c]').forEach(c=>c.checked=R.cats.has(tags[c.dataset.c].n));
+ $('#rall').checked=R.cats.size==tags.length;rview();
+};
+function rview(){
+ const L=Object.values(interni),B={};L.forEach(i=>{B[i.b]=B[i.b]||{};(B[i.b][i.f]=B[i.b][i.f]||[]).push(i)});
+ const tot=a=>a.reduce((s,i)=>s+rcount(i).length,0),sel=a=>a.filter(i=>R.sel.has(i.key)).length;
+ const row=(lv,key,lab,a,op)=>{const n=tot(a),s=sel(a);return `<div class="tr2 l${lv}${n?'':' z'}"><span class="ex" data-x="${key}">${op?'▾':'▸'}</span><input type="checkbox" data-g="${key}" data-s="${s==a.length?1:s?2:0}"><label>${lab}</label><b>${n}</b></div>`};
+ let h='';
+ for(const b of Object.keys(B).sort(natural)){
+  const bi=Object.values(B[b]).flat();h+=row(0,b,b.length<=2?'Edificio '+b.toUpperCase():cap(b),bi,R.ob.has(b));
+  if(R.ob.has(b))for(const f of Object.keys(B[b]).sort(natural)){
+   const k=b+'/'+f,I=B[b][f].sort((x,y)=>natural(x.k,y.k));h+=row(1,k,cap(f),I,R.ob.has(k));
+   if(R.ob.has(k))I.forEach(i=>{const n=rcount(i).length;h+=`<div class="tr2 l2${n?'':' z'}"><span class="ex"></span><input type="checkbox" data-i="${i.key}"${R.sel.has(i.key)?' checked':''}><label>${i.k}</label><b>${n}</b></div>`});
+  }
+ }
+ const T=$('#rtree'),sc=T.scrollTop;T.innerHTML=h;T.scrollTop=sc;
+ T.querySelectorAll('[data-g]').forEach(c=>{const s=+c.dataset.s;c.checked=s==1;c.indeterminate=s==2});
+ const inc=L.filter(i=>R.sel.has(i.key)&&rcount(i).length),na=inc.reduce((s,i)=>s+rcount(i).length,0);
+ $('#rsum').textContent=`Verranno inclusi ${inc.length} interni, ${na} attività`;$('#rgo').disabled=!inc.length;
+}
+$('#rtree').onclick=e=>{const x=e.target.closest('[data-x]');if(x&&x.dataset.x){const k=x.dataset.x;R.ob.has(k)?R.ob.delete(k):R.ob.add(k);rview()}};
+$('#rtree').onchange=e=>{
+ const c=e.target;
+ if(c.dataset.g){const a=rgrp(c.dataset.g),all=a.every(i=>R.sel.has(i.key));a.forEach(i=>all?R.sel.delete(i.key):R.sel.add(i.key))}
+ else if(c.dataset.i)c.checked?R.sel.add(c.dataset.i):R.sel.delete(c.dataset.i);
+ rview();
+};
+$('#rcancel').onclick=()=>{R.stop=1;$('#rp').style.display='none'};
+
+const loadPdf=()=>window.jspdf?Promise.resolve():new Promise((ok,ko)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=ok;s.onerror=()=>ko(Error('libreria PDF non caricata'));document.head.appendChild(s)});
+const rgb=h=>/^#[0-9a-f]{6}$/i.test(h||'')?[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)):[136,136,136];
+const lat=s=>String(s||'').replace(/[^\u0000-\u00ff]/g,'');
+async function planPic(i,pins){
+ const bm=await createImageBitmap(await dl(i.plan)),k=Math.min(1,1600/Math.max(bm.width,bm.height)),W=Math.round(bm.width*k),H=Math.round(bm.height*k);
+ const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.drawImage(bm,0,0,W,H);
+ const r=Math.max(13,W*.014);
+ for(const p of pins){
+  const cx=p.x*W,cy=p.y*H;x.beginPath();x.arc(cx,cy,r,0,7);x.fillStyle=p.done?'#5fd47a':'#fff';x.fill();
+  x.lineWidth=r*.32;x.strokeStyle=tagColor(p.tag)||'#888888';x.stroke();
+  x.fillStyle='#111';x.font='bold '+Math.round(r*1.05)+'px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(p.n,cx,cy+r*.04);
+ }
+ return{u:c.toDataURL('image/jpeg',.82),w:W,h:H};
+}
+async function photoPic(i,f){
+ const bm=await createImageBitmap(await dl(i.dir+'/foto/'+f)),k=Math.min(1,1100/Math.max(bm.width,bm.height)),c=document.createElement('canvas');
+ c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
+ return{u:c.toDataURL('image/jpeg',.78),w:c.width,h:c.height};
+}
+async function makeReport(){
+ const btn=$('#rgo'),pg=$('#rpg');btn.disabled=true;R.stop=0;
+ try{
+  pg.textContent='Preparo…';await loadPdf();
+  const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  const inc=Object.values(interni).filter(i=>R.sel.has(i.key)&&rcount(i).length).sort((a,z)=>natural(a.b,z.b)||natural(a.k,z.k));
+  const compact=$('#rcmp').checked,M=12,PW=210,IW=PW-2*M,CW=(IW-4)/2,BOT=284,closed=R.st=='closed';
+  const title=lat($('#ttl').textContent||'').toUpperCase();
+  let y=M,first=true;
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(20);doc.text(`REPORT ${title} DEL ${fmt(iso())}`,M,y+5);y+=8;
+  const cn=tags.filter(t=>R.cats.has(t.n)).map(t=>t.n);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(90);
+  doc.text(lat(`Attività ${closed?'chiuse':'aperte'}  ·  Categorie: ${cn.length==tags.length?'tutte':cn.join(', ')}`),M,y+3);
+  y+=9;doc.setDrawColor(180);doc.line(M,y-3,PW-M,y-3);
+  const np=()=>{doc.addPage();y=M},need=h=>{if(y+h>BOT)np()};
+  let idx=0;
+  for(const i of inc){
+   if(R.stop)throw Error('stop');
+   pg.textContent=`Interno ${++idx} di ${inc.length}: ${i.k}…`;
+   const pins=rcount(i).sort((a,z)=>a.n-z.n),plan=await planPic(i,pins);
+   const pics=await Promise.all(pins.map(p=>p.photo?photoPic(i,p.photo).catch(()=>null):null));
+   // celle: la pianta e una scheda per ogni segnalazione
+   const bw=compact?CW:IW,bh=compact?100:150,asp=plan.w/plan.h,pw=Math.min(bw,bh*asp);
+   const cells=[{plan,w:pw,h:pw/asp}];
+   doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+   pins.forEach((p,j)=>{
+    const lines=doc.splitTextToSize(lat(p.desc)||'(nessuna descrizione)',CW),pic=pics[j];
+    const dates=[p.creato&&'Creata '+fmt(p.creato),p.modificato&&'Modificata '+fmt(p.modificato)].filter(Boolean).join('  ·  ');
+    let ph=0,pw2=0;if(pic){ph=Math.min(68,CW*pic.h/pic.w);pw2=ph*pic.w/pic.h}
+    cells.push({p,lines,dates,pic,pw:pw2,ph,h:7+lines.length*4.2+(dates?4.6:0)+(pic?ph+2:0)+2});
+   });
+   // legenda categorie presenti
+   doc.setFontSize(9);let lx=M,ly=0;const items=[];
+   for(const c of [...new Set(pins.map(p=>p.tag))]){const w=doc.getTextWidth(lat(c))+8;if(lx+w>PW-M){lx=M;ly+=5}items.push({c,x:lx,y:ly});lx+=w+2}
+   const HH=8,LH=ly+6,rows=[];
+   if(compact){for(let j=0;j<cells.length;j+=2)rows.push(cells.slice(j,j+2))}
+   else{rows.push([cells[0]]);for(let j=1;j<cells.length;j+=2)rows.push(cells.slice(j,j+2))}
+   const rh=r=>Math.max(...r.map(c=>c.h));
+   if(!compact&&!first)np();
+   need(HH+LH+rh(rows[0])+2);
+   // intestazione interno
+   doc.setFillColor(232,236,240);doc.rect(M,y,IW,HH-1,'F');doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(20);
+   doc.text(lat(`${i.k}   ${i.b.length<=2?'EDIFICIO '+i.b.toUpperCase():i.b.toUpperCase()} / ${i.f.toUpperCase()}`),M+2,y+5.3);y+=HH;
+   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40);
+   items.forEach(t=>{doc.setFillColor(...rgb(tagColor(t.c)));doc.rect(t.x,y+t.y+.6,3.2,3.2,'F');doc.text(lat(t.c),t.x+4.6,y+t.y+3.4)});
+   y+=LH;
+   rows.forEach((r,ri)=>{
+    const h=rh(r);if(ri>0)need(h+2);
+    r.forEach((c,ci)=>{
+     const x=(!compact&&c.plan)?M:M+ci*(CW+4);
+     if(c.plan){doc.addImage(c.plan.u,'JPEG',x,y,c.w,c.h);doc.setDrawColor(190);doc.rect(x,y,c.w,c.h)}
+     else{
+      doc.setFillColor(...rgb(tagColor(c.p.tag)));doc.circle(x+2.4,y+2.6,2.1,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(20);
+      doc.text(lat(`n° ${c.p.n}   ${c.p.tag}  ·  ${c.p.done?'Risolta':'Aperta'}`),x+6,y+3.4);
+      let yy=y+7;doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(30);
+      c.lines.forEach(l=>{doc.text(l,x,yy+3);yy+=4.2});
+      if(c.dates){doc.setFontSize(8);doc.setTextColor(120);doc.text(c.dates,x,yy+3);yy+=4.6}
+      if(c.pic)doc.addImage(c.pic.u,'JPEG',x,yy+1,c.pw,c.ph);
+     }
+    });
+    y+=h+2;
+   });
+   y+=3;first=false;
+  }
+  const n=doc.getNumberOfPages();
+  for(let q=1;q<=n;q++){doc.setPage(q);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(130);doc.text(`Pagina ${q} di ${n}`,PW/2,291,{align:'center'})}
+  pg.textContent='Salvo il PDF…';
+  const name=`Report_${title.replace(/[^A-Z0-9]+/g,'_')}_${iso()}.pdf`,f=new File([doc.output('blob')],name,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]})}catch(e){if(e.name!='AbortError')doc.save(name)}}else doc.save(name);
+  $('#rp').style.display='none';toast('Report creato ('+n+' pagine)');
+ }catch(e){pg.textContent=e.message=='stop'?'Annullato':'Errore: '+e.message}
+ rview();
+}
+$('#rgo').onclick=makeReport;
 
 /* ---------- Impostazioni ---------- */
 $('#bref').onclick=()=>{if(T)start()};
