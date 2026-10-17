@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>EURORA LIVING</title>
+<title>Lavori cantiere</title>
 <style>
 :root{--z:1;--bg:#e9edf1;--card:#fff;--ink:#101c26;--mut:#5d6b78;--acc:#0b5f8a;--red:#d62828;--grn:#1f9d4a;--line:#d3dae0}
 @media(prefers-color-scheme:dark){:root{--bg:#0f151a;--card:#19222a;--ink:#e8eef2;--mut:#8fa0ad;--acc:#4fb0e3;--line:#2b3741;--grn:#4cd070}}
@@ -91,9 +91,17 @@ input{font:inherit}
 #sheet .acts{margin-top:auto}
 #big{position:fixed;inset:0;z-index:50;background:#000d;display:none;align-items:center;justify-content:center}
 #big img{max-width:96%;max-height:96%;border-radius:calc(8px*var(--z))}
+#ttl{min-height:1.3em}
+#dt{font-size:calc(13px*var(--z));color:var(--mut);flex:none}
+.fb{flex:1;min-height:calc(100px*var(--z))}
+#phw{width:auto;height:100%;flex:0 1 auto;min-width:calc(110px*var(--z));max-width:calc(100% - calc(66px*var(--z)))}
+#ph{width:auto;max-width:100%;height:100%;max-height:100%;object-fit:contain;background:transparent}
+.fbb{flex:1 1 calc(56px*var(--z));min-width:calc(56px*var(--z))}
+.fbb .btn{white-space:nowrap;overflow:hidden;padding-left:0;padding-right:0}
+.fbb.nar .tx{display:none}
 </style></head><body>
 <div id="app">
-<header><h1>EURORA LIVING</h1>
+<header><h1 id="ttl"></h1>
 <button class="hb" id="bout">Esci</button>
 <button class="hb" id="bset">⚙ Impostazioni</button>
 <div class="hg"><button class="hb" id="btag">Categorie</button><button class="hb" id="bref" title="Aggiorna">⟳</button></div></header>
@@ -106,9 +114,10 @@ input{font:inherit}
 </div>
 
 <div id="sheet">
+ <div id="dt"></div>
  <textarea id="desc" rows="4"></textarea>
  <div id="chips"></div>
- <div class="fb"><div id="phw"><img id="ph" alt="Foto"><span id="phe">Nessuna foto</span></div><div class="fbb"><button class="btn g" id="bcam">📷 Scatta</button><button class="btn g" id="bgal">🖼 Galleria</button></div></div>
+ <div class="fb"><div id="phw"><img id="ph" alt="Foto"><span id="phe">Nessuna foto</span></div><div class="fbb"><button class="btn g" id="bcam"><span>📷</span><span class="tx"> Scatta</span></button><button class="btn g" id="bgal"><span>🖼</span><span class="tx"> Galleria</span></button></div></div>
  <input type="file" id="fcam" accept="image/*" capture="environment" hidden>
  <input type="file" id="fgal" accept="image/*" hidden>
  <div class="acts"><button class="btn" id="stato">Aperta</button><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">🗑</button><button class="btn" id="save">Salva</button></div>
@@ -127,11 +136,19 @@ const PAL=['#e6194b','#f58231','#4363d8','#911eb4','#42d4f4','#f032e6','#9a6324'
 const hx=(h,s,l)=>{s/=100;l/=100;const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;return l-a*Math.max(-1,Math.min(k-3,9-k,1))};return'#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')};
 const COL=[...PAL];for(const l of[36,50,66])for(let h=0;h<360;h+=30)COL.push(hx(h,75,l));COL.push('#111111','#6b7280','#d1d5db');
 const DEF=['Elettrico','Idraulico','Edile','Serramenti','Imbianchino','Pavimenti','Altro'].map((n,i)=>({n,c:PAL[i]}));
-const CFG='/impostazioni/categorie.json';
+const CFG='/impostazioni/categorie.json',TIT='/impostazioni/titolo.txt';
+const setTitle=t=>{$('#ttl').textContent=t;document.title=t};
+async function loadTitle(){
+ try{const t=(await (await dl(TIT)).text()).replace(/^\uFEFF/,'').split(/\r?\n/).map(x=>x.trim()).find(Boolean);setTitle(t||'NOME CANTIERE')}
+ catch{setTitle('NOME CANTIERE')}
+}
 let T=JSON.parse(LS.t||'null'),interni={},tags=DEF,cur=null,data=null,view={x:0,y:0,s:1},pin=null,dr={tag:'',done:false},isNew=false,photoBlob=null;
 const cache={},openF=new Set(),redirect=location.origin+location.pathname;
 const toast=m=>{const e=$('#toast');e.textContent=m;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2600)};
 const tagColor=n=>(tags.find(t=>t.n==n)||{}).c;
+const iso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fmt=x=>x?x.split('-').reverse().join('/'):'';
+const dtShow=p=>{$('#dt').textContent=[p.creato&&'Creata: '+fmt(p.creato),p.modificato&&'Modificata: '+fmt(p.modificato)].filter(Boolean).join(' · ')};
 
 /* ---------- Scala interfaccia (solo elenco) ---------- */
 let pz=parseFloat(LS.pz)||1;
@@ -181,7 +198,7 @@ const jput=(p,o)=>up(p,new Blob([JSON.stringify(o)],{type:'application/json'}));
 
 /* ---------- Elenco ---------- */
 async function load(){
- $('#list').innerHTML='<div class="msg">Caricamento…</div>';
+ $('#list').innerHTML='<div class="msg">Caricamento…</div>';loadTitle();
  let r=await rpc('files/list_folder',{path:'',recursive:true,limit:2000}),all=r.entries;
  while(r.has_more){r=await rpc('files/list_folder/continue',{cursor:r.cursor});all=all.concat(r.entries)}
  interni={};
@@ -192,7 +209,7 @@ async function load(){
   const key=p.slice(0,3).join('/').toLowerCase();
   const i=interni[key]=interni[key]||{key,k:p[2].toUpperCase(),b:p[0],f:p[1],dir:'/'+p.slice(0,3).join('/')};
   if(p.length==4&&e['.tag']=='file'){
-   if(/\.(jpe?g|png)$/i.test(p[3])&&(!i.plan||/^pianta\./i.test(p[3])))i.plan=e.path_display;
+   if(/\.(jpe?g|png)$/i.test(p[3])&&p[3].replace(/\.(jpe?g|png)$/i,'').toLowerCase()===p[2].toLowerCase())i.plan=e.path_display;
    if(p[3].toLowerCase()=='dati.json')i.has=1;
   }
  }
@@ -208,7 +225,7 @@ const sum=a=>a.reduce((s,i)=>{const c=cnt(i);return[s[0]+c[0],s[1]+c[1]]},[0,0])
 const nums=t=>`<span class="nb r">${t[0]}</span><span class="nb g">${t[1]}</span>`;
 function render(){
  const L=Object.values(interni);
- if(!L.length){$('#list').innerHTML='<div class="msg">Nessuna cartella trovata. Nel Dropbox crea Edificio / Piano / Interno (es. A / piano 0 / a01), con la pianta JPEG dentro la cartella dell\'interno, poi tocca ⟳.</div>';return}
+ if(!L.length){$('#list').innerHTML='<div class="msg">Nessuna cartella trovata. Nel Dropbox crea Edificio / Piano / Interno (es. A / piano 0 / a01), con dentro la pianta JPEG che ha lo stesso nome della cartella (es. a01.jpg), poi tocca ⟳.</div>';return}
  const B={};L.forEach(i=>{B[i.b]=B[i.b]||{};(B[i.b][i.f]=B[i.b][i.f]||[]).push(i)});
  const all=sum(L);let h='';
  for(const b of Object.keys(B).sort(natural)){
@@ -217,7 +234,7 @@ function render(){
   if(openF.has(b))for(const f of Object.keys(fl).sort(natural)){
    const k=b+'/'+f,I=fl[f].sort((x,y)=>natural(x.k,y.k));
    h+=`<div class="fh" data-f="${k}"><b>${cap(f)}</b><span class="n">${I.length} interni</span>${nums(sum(I))}<span class="chev">${openF.has(k)?'▾':'▸'}</span></div>`
-    +(openF.has(k)?I.map(i=>`<div class="row" data-k="${i.key}"><b>${i.k}</b><span>${i.plan?'':'manca la pianta'}</span>${nums(cnt(i))}</div>`).join(''):'');
+    +(openF.has(k)?I.map(i=>`<div class="row" data-k="${i.key}"><b>${i.k}</b><span>${i.plan?'':'manca '+i.k.toLowerCase()+'.jpg'}</span>${nums(cnt(i))}</div>`).join(''):'');
   }
   h+='</div>';
  }
@@ -257,8 +274,9 @@ function drawPins(){
  }
 }
 async function openInt(k){
- const i=interni[k];if(!i.plan)return toast('Manca la pianta JPEG nella cartella '+k);
+ const i=interni[k];if(!i.plan)return toast('Manca '+i.k.toLowerCase()+'.jpg nella cartella '+i.k);
  cur=i;data=i.d||{pins:[]};data.pins=data.pins||[];pin=null;
+ if(data.interno&&String(data.interno).toUpperCase()!==i.k)toast('Attenzione: questo dati.json appartiene a '+data.interno+', non a '+i.k);
  $('#vt').textContent=(i.b+' › '+i.f+' › '+i.k).toUpperCase();$('#viewer').style.display='block';
  const im=$('#plan');im.onload=()=>{fit();drawPins()};
  try{if(!i.url)i.url=URL.createObjectURL(await dl(i.plan));im.src=i.url}catch{toast('Pianta non scaricata');closeViewer()}
@@ -310,7 +328,7 @@ function tap(e,el){
  if(pin&&isNew){pin.x=x;pin.y=y;drawPins();return reveal()}
  if(pin)return closeSheet();
  const n=data.pins.reduce((m,p)=>Math.max(m,p.n),0)+1;
- edit({id:Date.now().toString(36),n,x,y,desc:'',tag:'',done:false,photo:''},true);
+ edit({id:Date.now().toString(36),n,x,y,desc:'',tag:'',done:false,photo:'',creato:iso()},true);
 }
 
 /* ---------- Segnalazione ---------- */
@@ -323,15 +341,17 @@ function stato(){const b=$('#stato');b.textContent=dr.done?'✓ Risolta':'Aperta
 $('#stato').onclick=()=>{dr.done=!dr.done;stato();drawPins()};
 async function edit(p,nuovo){
  pin=p;isNew=nuovo;photoBlob=null;dr={tag:tagColor(p.tag)?p.tag:'',done:!!p.done};
- $('#desc').value=p.desc||'';$('#desc').placeholder='Descrizione segnalazione '+p.n;
+ $('#desc').value=p.desc||'';$('#desc').placeholder='Descrizione segnalazione '+p.n;dtShow(p);
  chips();stato();$('#del').style.display=nuovo?'none':'';
  showPh('');
- $('#sheet').style.display='flex';drawPins();reveal();
+ $('#sheet').style.display='flex';fitBtns();drawPins();reveal();
  if(p.photo){try{if(!cache[p.photo])cache[p.photo]=URL.createObjectURL(await dl(cur.dir+'/foto/'+p.photo));if(pin===p)showPh(cache[p.photo])}catch{}}
 }
 function closeSheet(){$('#sheet').style.display='none';pin=null;if(data)drawPins()}
 $('#cancel').onclick=closeSheet;
 function showPh(u){const ph=$('#ph');if(u){ph.src=u;ph.style.display='block';$('#phe').style.display='none'}else{ph.removeAttribute('src');ph.style.display='none';$('#phe').style.display=''}}
+function fitBtns(){const b=document.querySelector('.fbb');b.classList.remove('nar');if([...b.children].some(x=>x.scrollWidth>x.clientWidth+1))b.classList.add('nar')}
+$('#ph').onload=fitBtns;addEventListener('resize',fitBtns);
 $('#phw').onclick=()=>{const u=$('#ph').getAttribute('src');if(!u)return;$('#bigi').src=u;$('#big').style.display='flex'};
 $('#big').onclick=()=>$('#big').style.display='none';
 $('#bcam').onclick=()=>$('#fcam').click();
@@ -347,12 +367,15 @@ const onFoto=async e=>{
  e.target.value='';
 };
 $('#fcam').onchange=$('#fgal').onchange=onFoto;
-const saveData=async()=>{await jput(cur.dir+'/dati.json',data);cur.d=data;cur.has=1};
+const saveData=async()=>{
+ const o={edificio:cur.b,piano:cur.f,interno:cur.k};for(const k in data)if(!(k in o))o[k]=data[k];data=o;
+ await jput(cur.dir+'/dati.json',data);cur.d=data;cur.has=1;
+};
 $('#save').onclick=async()=>{
  if(!dr.tag)return toast('Scegli una categoria');
  const p=pin,b=$('#save');b.disabled=true;b.textContent='Salvo…';
- const old={desc:p.desc,tag:p.tag,done:p.done,photo:p.photo};
- p.desc=$('#desc').value.trim();p.tag=dr.tag;p.done=dr.done;
+ const old={desc:p.desc,tag:p.tag,done:p.done,photo:p.photo,creato:p.creato,modificato:p.modificato};
+ p.desc=$('#desc').value.trim();p.tag=dr.tag;p.done=dr.done;if(!isNew)p.modificato=iso();
  try{
   if(photoBlob){p.photo=`${cur.k}_${p.n}_${Date.now()}.jpg`;await up(cur.dir+'/foto/'+p.photo,photoBlob);cache[p.photo]=URL.createObjectURL(photoBlob)}
   if(isNew)data.pins.push(p);
