@@ -232,40 +232,29 @@ async function load(){
  let r=await rpc('files/list_folder',{path:'',recursive:true,limit:2000}),all=r.entries;
  while(r.has_more){r=await rpc('files/list_folder/continue',{cursor:r.cursor});all=all.concat(r.entries)}
  interni={};
-
-for(const e of all){
+ // 1) cartelle valide a qualsiasi profondità (escluse /impostazioni e le cartelle "foto" create dall'app)
+ const dirs=new Map(),hasKid=new Set(),files=[];
+ for(const e of all){
   const p=e.path_display.split('/').filter(Boolean);
-  if(!p.length||/^impostazioni$/i.test(p[0]))continue;
-
+  if(!p.length||/^impostazioni$/i.test(p[0])||p.some(x=>/^foto$/i.test(x)))continue;
   if(e['.tag']==='folder'){
-    // Qualsiasi cartella a qualsiasi livello viene indicizzata
-    const key=p.join('/').toLowerCase();
-    const k=p[p.length-1].toUpperCase();
-    let b,f;
-    if(p.length===1){
-      b=p[0]; f='—';
-    }else if(p.length===2){
-      b=p[0]; f='—';
-    }else{
-      b=p[p.length-3];
-      f=p[p.length-2];
-    }
-    interni[key]=interni[key]||{key,k,b,f,dir:'/'+p.join('/')};
-  }
-  else if(e['.tag']==='file'&&p.length>=2){
-    // Il file è figlio diretto di una cartella
-    const parentPath=p.slice(0,-1);
-    const parentKey=parentPath.join('/').toLowerCase();
-    const i=interni[parentKey];
-    if(!i)continue;
-    const fname=p[p.length-1];
-    if(/\.(jpe?g|png)$/i.test(fname)&&fname.replace(/\.(jpe?g|png)$/i,'').toLowerCase()===parentPath[parentPath.length-1].toLowerCase()){
-      i.plan=e.path_display;
-    }
-    if(fname.toLowerCase()==='dati.json')i.has=1;
-  }
-}
-
+   const key=p.join('/').toLowerCase();dirs.set(key,{key,p});
+   if(p.length>1)hasKid.add(p.slice(0,-1).join('/').toLowerCase());
+  }else if(e['.tag']==='file'&&p.length>=2)files.push({p,path:e.path_display});
+ }
+ // 2) "interno" = cartella ultima (senza sottocartelle)
+ for(const [key,d] of dirs){
+  if(hasKid.has(key))continue;
+  const p=d.p;
+  interni[key]={key,p,k:p[p.length-1].toUpperCase(),b:p[0],f:p.slice(1,-1).join(' / '),dir:'/'+p.join('/')};
+ }
+ // 3) file figli diretti: pianta (jpg/png con lo stesso nome della cartella) e dati.json
+ for(const {p,path} of files){
+  const i=interni[p.slice(0,-1).join('/').toLowerCase()];if(!i)continue;
+  const fn=p[p.length-1];
+  if(/\.(jpe?g|png)$/i.test(fn)&&fn.replace(/\.(jpe?g|png)$/i,'').toLowerCase()===p[p.length-2].toLowerCase())i.plan=path;
+  if(fn.toLowerCase()==='dati.json')i.has=1;
+ }
  try{const t=(await jget(CFG)).tags;if(!t||!t.length)throw Error('vuoto');tags=t}
  catch(e){tags=DEF;if(String(e.message)=='dl409')jput(CFG,{tags}).catch(()=>{})}
  await Promise.all(Object.values(interni).filter(i=>i.has).map(async i=>{try{i.d=await jget(i.dir+'/dati.json')}catch{}}));
@@ -276,24 +265,33 @@ const urg=i=>!!(i.d&&i.d.priorita==='alta');
 const DIA='<svg class="dia" viewBox="0 0 24 24"><path d="M12 1.5 22.5 12 12 22.5 1.5 12Z" fill="#d62828"/><path d="M12 6.8v7M12 16.6v1.6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>';
 const ub=a=>{const u=a.filter(urg).length;return u?`<span class="ub">${DIA}${u}</span>`:''};
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const hxe=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* albero a profondità qualsiasi costruito dai percorsi degli interni */
+function tree(L){
+ const root={ch:new Map()};
+ for(const i of L){let n=root;i.p.forEach((name,j)=>{const key=i.p.slice(0,j+1).join('/').toLowerCase();
+  if(!n.ch.has(key))n.ch.set(key,{name,key,ch:new Map()});n=n.ch.get(key)});n.leaf=i}
+ return root;
+}
+const leaves=n=>n.leaf?[n.leaf]:[...n.ch.values()].flatMap(leaves);
+const kids=n=>[...n.ch.values()].sort((a,z)=>natural(a.name,z.name));
+const lab0=(n,d)=>d==0&&n.name.length<=2?'Edificio '+n.name.toUpperCase():cap(n.name);
+const ctx=i=>i.p.slice(0,-1).map((x,j)=>j==0&&x.length<=2?'EDIFICIO '+x:x).join(' / ').toUpperCase();
 const natural=(a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'});
 const sum=a=>a.reduce((s,i)=>{const c=cnt(i);return[s[0]+c[0],s[1]+c[1]]},[0,0]);
 const nums=t=>`<span class="nb r">${t[0]}</span><span class="nb g">${t[1]}</span>`;
 function render(){
  const L=Object.values(interni);
- if(!L.length){$('#list').innerHTML='<div class="msg">Nessuna cartella trovata. Nel Dropbox crea Edificio / Piano / Interno (es. A / piano 0 / a01), con dentro la pianta JPEG che ha lo stesso nome della cartella (es. a01.jpg), poi tocca ⟳.</div>';return}
- const B={};L.forEach(i=>{B[i.b]=B[i.b]||{};(B[i.b][i.f]=B[i.b][i.f]||[]).push(i)});
+ if(!L.length){$('#list').innerHTML='<div class="msg">Nessuna cartella trovata. Nel Dropbox crea le cartelle (a qualsiasi livello, es. A / piano 0 / a01), con dentro nella cartella ultima la pianta JPEG che ha lo stesso nome della cartella (es. a01.jpg), poi tocca ⟳.</div>';return}
  const all=sum(L);let h='';
- for(const b of Object.keys(B).sort(natural)){
-  const fl=B[b],bi=Object.values(fl).flat();
-  h+=`<div class="ed"><div class="eh" data-f="${b}"><b>${b.length<=2?'Edificio '+b.toUpperCase():cap(b)}</b><span class="n">${bi.length} interni</span>${ub(bi)}${nums(sum(bi))}<span class="chev">${openF.has(b)?'▾':'▸'}</span></div>`;
-  if(openF.has(b))for(const f of Object.keys(fl).sort(natural)){
-   const k=b+'/'+f,I=fl[f].sort((x,y)=>natural(x.k,y.k));
-   h+=`<div class="fh" data-f="${k}"><b>${cap(f)}</b><span class="n">${I.length} interni</span>${ub(I)}${nums(sum(I))}<span class="chev">${openF.has(k)?'▾':'▸'}</span></div>`
-    +(openF.has(k)?I.map(i=>`<div class="row" data-k="${i.key}"><b>${urg(i)?DIA:''}${i.k}</b><span>${i.plan?'':'manca '+i.k.toLowerCase()+'.jpg'}</span>${nums(cnt(i))}</div>`).join(''):'');
-  }
-  h+='</div>';
- }
+ const rnode=(n,d)=>{
+  if(n.leaf){const i=n.leaf,pl=d==0?18:30+(d-1)*16;
+   return `<div class="row" data-k="${hxe(i.key)}" style="padding-left:calc(${pl}px*var(--z))"><b>${urg(i)?DIA:''}${hxe(i.k)}</b><span>${i.plan?'':'manca '+esc(i.p[i.p.length-1].toLowerCase())+'.jpg'}</span>${nums(cnt(i))}</div>`}
+  const I=leaves(n),o=openF.has(n.key);
+  return `<div class="${d?'fh':'eh'}" data-f="${hxe(n.key)}"${d?` style="padding-left:calc(${30+(d-1)*16}px*var(--z))"`:''}><b>${hxe(lab0(n,d))}</b><span class="n">${I.length} interni</span>${ub(I)}${nums(sum(I))}<span class="chev">${o?'▾':'▸'}</span></div>`
+   +(o?kids(n).map(c=>rnode(c,d+1)).join(''):'');
+ };
+ for(const n of kids(tree(L)))h+=`<div class="ed">${rnode(n,0)}</div>`;
  $('#list').innerHTML=`<div class="sums"><div class="sc" data-st="open" data-n="${all[0]}"><small>Attività aperte:</small><span class="big" style="color:var(--red)">${all[0]}</span>${all[0]?'<em>Tocca per il report</em>':''}</div><div class="sc" data-st="closed" data-n="${all[1]}"><small>Attività chiuse:</small><span class="big" style="color:var(--grn)">${all[1]}</span>${all[1]?'<em>Tocca per il report</em>':''}</div></div>`+h;
 }
 $('#list').onclick=e=>{
@@ -331,10 +329,10 @@ function drawPins(){
  }
 }
 async function openInt(k){
- const i=interni[k];if(!i.plan)return toast('Manca '+i.k.toLowerCase()+'.jpg nella cartella '+i.k);
+ const i=interni[k];if(!i.plan)return toast('Manca '+i.p[i.p.length-1].toLowerCase()+'.jpg nella cartella '+i.k);
  cur=i;data=i.d||{pins:[]};data.pins=data.pins||[];pin=null;prioShow();
  if(data.interno&&String(data.interno).toUpperCase()!==i.k)toast('Attenzione: questo dati.json appartiene a '+data.interno+', non a '+i.k);
- $('#vt').textContent=(i.b+' › '+i.f+' › '+i.k).toUpperCase();$('#viewer').style.display='block';
+ $('#vt').textContent=i.p.join(' › ').toUpperCase();$('#viewer').style.display='block';
  const im=$('#plan');im.onload=()=>{fit();drawPins()};
  try{if(!i.url)i.url=URL.createObjectURL(await dl(i.plan));im.src=i.url}catch{toast('Pianta non scaricata');closeViewer()}
 }
@@ -430,7 +428,7 @@ const onFoto=async e=>{
 };
 $('#fcam').onchange=$('#fgal').onchange=onFoto;
 const saveData=async()=>{
- const o={edificio:cur.b,piano:cur.f,interno:cur.k};for(const k in data)if(!(k in o))o[k]=data[k];data=o;
+ const o={edificio:cur.b,piano:cur.f,interno:cur.k,percorso:cur.p.join('/')};for(const k in data)if(!(k in o))o[k]=data[k];data=o;
  await jput(cur.dir+'/dati.json',data);cur.d=data;cur.has=1;
 };
 $('#save').onclick=async()=>{
@@ -458,7 +456,7 @@ $('#del').onclick=async function(){
 /* ---------- Report PDF ---------- */
 let R={};
 const rcount=i=>(R.pr&&!urg(i))?[]:((i.d&&i.d.pins)||[]).filter(x=>R.cats.has(x.tag)&&!!x.done===(R.st=='closed'));
-const rgrp=k=>{const[b,f]=k.split('/');return Object.values(interni).filter(i=>i.b==b&&(f===undefined||i.f==f))};
+const rgrp=k=>Object.values(interni).filter(i=>i.key===k||i.key.startsWith(k+'/'));
 function openReport(st){
  R={st,pr:false,cats:new Set(tags.map(t=>t.n)),sel:new Set(),ob:new Set()};$('#rpr').checked=false;$('#rres').style.display='none';$('#rcancel').textContent='Annulla';
  $('#rpt').textContent='Report attività '+(st=='open'?'aperte':'chiuse');
@@ -472,17 +470,16 @@ $('#rcats').onchange=e=>{
  $('#rall').checked=R.cats.size==tags.length;rview();
 };
 function rview(){
- const L=Object.values(interni),B={};L.forEach(i=>{B[i.b]=B[i.b]||{};(B[i.b][i.f]=B[i.b][i.f]||[]).push(i)});
+ const L=Object.values(interni);
  const tot=a=>a.reduce((s,i)=>s+rcount(i).length,0),sel=a=>a.filter(i=>R.sel.has(i.key)).length;
- const row=(lv,key,lab,a,op)=>{const n=tot(a),s=sel(a);return `<div class="tr2 l${lv}${n?'':' z'}"><span class="ex" data-x="${key}">${op?'▾':'▸'}</span><input type="checkbox" data-g="${key}" data-s="${s==a.length?1:s?2:0}"><label>${lab}</label><b>${n}</b></div>`};
- let h='';
- for(const b of Object.keys(B).sort(natural)){
-  const bi=Object.values(B[b]).flat();h+=row(0,b,b.length<=2?'Edificio '+b.toUpperCase():cap(b),bi,R.ob.has(b));
-  if(R.ob.has(b))for(const f of Object.keys(B[b]).sort(natural)){
-   const k=b+'/'+f,I=B[b][f].sort((x,y)=>natural(x.k,y.k));h+=row(1,k,cap(f),I,R.ob.has(k));
-   if(R.ob.has(k))I.forEach(i=>{const n=rcount(i).length;h+=`<div class="tr2 l2${n?'':' z'}"><span class="ex"></span><input type="checkbox" data-i="${i.key}"${R.sel.has(i.key)?' checked':''}><label>${i.k}</label><b>${n}</b></div>`});
-  }
- }
+ const pad=d=>`style="padding-left:calc(${d?22*d:4}px*var(--z))"`;
+ const row=(lv,key,lab,a,op)=>{const n=tot(a),s=sel(a);return `<div class="tr2 l${Math.min(lv,2)}${n?'':' z'}" ${pad(lv)}><span class="ex" data-x="${hxe(key)}">${op?'▾':'▸'}</span><input type="checkbox" data-g="${hxe(key)}" data-s="${s==a.length?1:s?2:0}"><label>${hxe(lab)}</label><b>${n}</b></div>`};
+ const walk=(n,d)=>{
+  if(n.leaf){const i=n.leaf,c=rcount(i).length;return `<div class="tr2 l${Math.min(d,2)}${c?'':' z'}" ${pad(d)}><span class="ex"></span><input type="checkbox" data-i="${hxe(i.key)}"${R.sel.has(i.key)?' checked':''}><label>${hxe(i.k)}</label><b>${c}</b></div>`}
+  const open=R.ob.has(n.key);
+  return row(d,n.key,lab0(n,d),leaves(n),open)+(open?kids(n).map(c=>walk(c,d+1)).join(''):'');
+ };
+ let h='';for(const n of kids(tree(L)))h+=walk(n,0);
  const T=$('#rtree'),sc=T.scrollTop;T.innerHTML=h;T.scrollTop=sc;
  T.querySelectorAll('[data-g]').forEach(c=>{const s=+c.dataset.s;c.checked=s==1;c.indeterminate=s==2});
  const inc=L.filter(i=>R.sel.has(i.key)&&rcount(i).length),na=inc.reduce((s,i)=>s+rcount(i).length,0);
@@ -522,7 +519,7 @@ async function makeReport(){
  try{
   pg.textContent='Preparo…';await loadPdf();
   const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
-  const inc=Object.values(interni).filter(i=>R.sel.has(i.key)&&rcount(i).length).sort((a,z)=>natural(a.b,z.b)||natural(a.k,z.k));
+  const inc=Object.values(interni).filter(i=>R.sel.has(i.key)&&rcount(i).length).sort((a,z)=>natural(a.p.join('/'),z.p.join('/')));
   const compact=$('#rcmp').checked,M=12,PW=210,IW=PW-2*M,CW=(IW-4)/2,BOT=284,closed=R.st=='closed';
   const title=lat($('#ttl').textContent||'').toUpperCase();
   let y=M,first=true;
@@ -559,7 +556,7 @@ async function makeReport(){
    need(HH+LH+rh(rows[0])+2);
    // intestazione interno
    doc.setFillColor(232,236,240);doc.rect(M,y,IW,HH-1,'F');doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(20);
-   doc.text(lat(`${i.k}   ${i.b.length<=2?'EDIFICIO '+i.b.toUpperCase():i.b.toUpperCase()} / ${i.f.toUpperCase()}`),M+2,y+5.3);
+   doc.text(lat(`${i.k}${ctx(i)?'   '+ctx(i):''}`),M+2,y+5.3);
    if(urg(i)){
     doc.setFillColor(214,40,40);doc.rect(PW-M-44,y+.8,43.2,5.4,'F');doc.setFillColor(255,255,255);
     const cx=PW-M-40,cy=y+3.5;doc.triangle(cx,cy-2.2,cx+2.2,cy,cx,cy+2.2,'F');doc.triangle(cx,cy-2.2,cx-2.2,cy,cx,cy+2.2,'F');
