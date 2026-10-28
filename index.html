@@ -232,17 +232,40 @@ async function load(){
  let r=await rpc('files/list_folder',{path:'',recursive:true,limit:2000}),all=r.entries;
  while(r.has_more){r=await rpc('files/list_folder/continue',{cursor:r.cursor});all=all.concat(r.entries)}
  interni={};
- for(const e of all){
+
+for(const e of all){
   const p=e.path_display.split('/').filter(Boolean);
-  if(p.length<3||/^impostazioni$/i.test(p[0]))continue;
-  if(p.length==3&&e['.tag']!='folder')continue;
-  const key=p.slice(0,3).join('/').toLowerCase();
-  const i=interni[key]=interni[key]||{key,k:p[2].toUpperCase(),b:p[0],f:p[1],dir:'/'+p.slice(0,3).join('/')};
-  if(p.length==4&&e['.tag']=='file'){
-   if(/\.(jpe?g|png)$/i.test(p[3])&&p[3].replace(/\.(jpe?g|png)$/i,'').toLowerCase()===p[2].toLowerCase())i.plan=e.path_display;
-   if(p[3].toLowerCase()=='dati.json')i.has=1;
+  if(!p.length||/^impostazioni$/i.test(p[0]))continue;
+
+  if(e['.tag']==='folder'){
+    // Qualsiasi cartella a qualsiasi livello viene indicizzata
+    const key=p.join('/').toLowerCase();
+    const k=p[p.length-1].toUpperCase();
+    let b,f;
+    if(p.length===1){
+      b=p[0]; f='—';
+    }else if(p.length===2){
+      b=p[0]; f='—';
+    }else{
+      b=p[p.length-3];
+      f=p[p.length-2];
+    }
+    interni[key]=interni[key]||{key,k,b,f,dir:'/'+p.join('/')};
   }
- }
+  else if(e['.tag']==='file'&&p.length>=2){
+    // Il file è figlio diretto di una cartella
+    const parentPath=p.slice(0,-1);
+    const parentKey=parentPath.join('/').toLowerCase();
+    const i=interni[parentKey];
+    if(!i)continue;
+    const fname=p[p.length-1];
+    if(/\.(jpe?g|png)$/i.test(fname)&&fname.replace(/\.(jpe?g|png)$/i,'').toLowerCase()===parentPath[parentPath.length-1].toLowerCase()){
+      i.plan=e.path_display;
+    }
+    if(fname.toLowerCase()==='dati.json')i.has=1;
+  }
+}
+
  try{const t=(await jget(CFG)).tags;if(!t||!t.length)throw Error('vuoto');tags=t}
  catch(e){tags=DEF;if(String(e.message)=='dl409')jput(CFG,{tags}).catch(()=>{})}
  await Promise.all(Object.values(interni).filter(i=>i.has).map(async i=>{try{i.d=await jget(i.dir+'/dati.json')}catch{}}));
