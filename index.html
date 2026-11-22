@@ -116,8 +116,6 @@ input{font:inherit}
 #rsum{margin:calc(10px*var(--z)) 0 calc(2px*var(--z));font-weight:700}#rpg{min-height:1.3em;color:var(--mut);font-size:calc(14px*var(--z))}
 #rgo:disabled{opacity:.4}
 .vr2{display:flex;align-items:center;gap:calc(8px*var(--z))}#vt{flex:1}
-#prio{display:flex;align-items:center;gap:calc(6px*var(--z));white-space:nowrap;padding:calc(6px*var(--z)) calc(10px*var(--z));font-size:calc(13px*var(--z))}
-#prio.hi{background:#d62828!important}
 .dia{width:calc(20px*var(--z));height:calc(20px*var(--z));vertical-align:calc(-4px*var(--z));margin-right:calc(4px*var(--z))}
 .ub{font-weight:800;color:#d62828;white-space:nowrap;font-size:calc(18px*var(--z))}
 #rres{display:none;gap:calc(8px*var(--z));margin:calc(10px*var(--z)) 0}#rres .btn{flex:1}
@@ -129,6 +127,10 @@ input{font:inherit}
 #chips.end{-webkit-mask-image:none;mask-image:none}
 .chip{flex:none;white-space:nowrap}
 .ed>.row:first-child{border-top:0}
+.dtr{display:flex;align-items:center;gap:calc(8px*var(--z));flex:none}.dtr #dt{flex:1}
+.pri{display:flex;align-items:center;gap:calc(5px*var(--z));white-space:nowrap;border:calc(1px*var(--z)) solid var(--line);border-radius:calc(10px*var(--z));background:transparent;color:var(--ink);padding:calc(5px*var(--z)) calc(10px*var(--z));font-size:calc(13px*var(--z));cursor:pointer}
+.pri.hi{background:#d62828;border-color:#d62828;color:#fff;font-weight:700}
+ .pin .pb{position:absolute;right:-10px;top:-13px;width:18px;height:18px;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 22.5 12 12 22.5 1.5 12Z' fill='%23d62828' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M12 6.8v7M12 16.6v1.6' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/contain}
 </style></head><body>
 <div id="app">
 <header><h1 id="ttl"></h1>
@@ -139,13 +141,13 @@ input{font:inherit}
 </div>
 
 <div id="viewer">
- <div id="vbar"><div class="vr"><button class="btn" id="vback">‹ Elenco</button><div class="vg"><button class="btn" id="zo">−</button><button class="btn" id="zf">Adatta</button><button class="btn" id="zi">+</button></div><div class="vg"><button class="btn" id="pm">○</button><button class="btn" id="pp">●</button></div></div><div class="vr2"><div id="vt"></div><button class="btn" id="prio"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 1.5 22.5 12 12 22.5 1.5 12Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 6.8v7M12 16.6v1.6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span id="prt">Priorità normale</span></button></div></div>
+ <div id="vbar"><div class="vr"><button class="btn" id="vback">‹ Elenco</button><div class="vg"><button class="btn" id="zo">−</button><button class="btn" id="zf">Adatta</button><button class="btn" id="zi">+</button></div><div class="vg"><button class="btn" id="pm">○</button><button class="btn" id="pp">●</button></div></div><div class="vr2"><div id="vt"></div></div></div>
  <div id="stage"><div id="layer"><img id="plan" alt="Pianta" draggable="false"></div></div>
 </div>
 
 <div id="sheet">
  <div id="sbody">
- <div id="dt"></div>
+ <div class="dtr"><div id="dt"></div><button type="button" class="pri" id="pri"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 1.5 22.5 12 12 22.5 1.5 12Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 6.8v7M12 16.6v1.6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span id="prl">Priorità</span></button></div>
  <textarea id="desc" rows="2"></textarea>
  <div id="chips"></div>
  <div class="fb"><div id="phw"><img id="ph" alt="Foto"><span id="phe">Nessuna foto</span></div><div class="fbb"><button class="btn g" id="bcam"><span>📷</span><span class="tx"> Scatta</span></button><button class="btn g" id="bgal"><span>🖼</span><span class="tx"> Galleria</span></button></div></div>
@@ -163,7 +165,7 @@ input{font:inherit}
 <label class="rl">Categorie</label><div id="rcats"></div>
 <label class="rl">Ambito</label><div id="rtree"></div>
 <label class="cat"><input type="checkbox" id="rcmp" checked> Compatto (più interni per pagina)</label>
-<label class="cat"><input type="checkbox" id="rpr"><svg width="16" height="16" style="color:#d62828" viewBox="0 0 24 24"><path d="M12 1.5 22.5 12 12 22.5 1.5 12Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 6.8v7M12 16.6v1.6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg> Solo interni con priorità alta</label>
+<label class="cat"><input type="checkbox" id="rpr"><svg width="16" height="16" style="color:#d62828" viewBox="0 0 24 24"><path d="M12 1.5 22.5 12 12 22.5 1.5 12Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 6.8v7M12 16.6v1.6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg> Solo priorità alta (pallini urgenti)</label>
 <div id="rres"><button class="btn" id="rop">Apri</button><button class="btn" id="rdl">Scarica</button><button class="btn" id="rsh">Condividi</button></div>
 <div id="rsum"></div><div id="rpg"></div>
 <div class="acts"><button class="btn g" id="rcancel">Annulla</button><button class="btn" id="rgo">Crea report</button></div></div>
@@ -271,9 +273,9 @@ async function load(){
  render();
 }
 const cnt=i=>{const p=(i.d&&i.d.pins)||[];return[p.filter(x=>!x.done).length,p.filter(x=>x.done).length]};
-const urg=i=>!!(i.d&&i.d.priorita==='alta');
+const ucount=i=>((i.d&&i.d.pins)||[]).filter(x=>!x.done&&x.priorita==='alta').length;
 const DIA='<svg class="dia" viewBox="0 0 24 24"><path d="M12 1.5 22.5 12 12 22.5 1.5 12Z" fill="#d62828"/><path d="M12 6.8v7M12 16.6v1.6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>';
-const ub=a=>{const u=a.filter(urg).length;return u?`<span class="ub">${DIA}${u}</span>`:''};
+const ub=a=>{const u=a.reduce((t,i)=>t+ucount(i),0);return u?`<span class="ub">${DIA}${u}</span>`:''};
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const hxe=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* albero a profondità qualsiasi costruito dai percorsi degli interni */
@@ -296,7 +298,7 @@ function render(){
  const all=sum(L);let h='';
  const rnode=(n,d)=>{
   if(n.leaf){const i=n.leaf,pl=d==0?18:30+(d-1)*16;
-   return `<div class="row" data-k="${hxe(i.key)}" style="padding-left:calc(${pl}px*var(--z))"><b>${urg(i)?DIA:''}${hxe(i.k)}</b><span>${i.plan?'':'manca '+hxe(i.p[i.p.length-1].toLowerCase())+'.jpg'}</span>${nums(cnt(i))}</div>`}
+   return `<div class="row" data-k="${hxe(i.key)}" style="padding-left:calc(${pl}px*var(--z))"><b>${hxe(i.k)}</b><span>${i.plan?'':'manca '+hxe(i.p[i.p.length-1].toLowerCase())+'.jpg'}</span>${ub([i])}${nums(cnt(i))}</div>`}
   const I=leaves(n),o=openF.has(n.key);
   return `<div class="${d?'fh':'eh'}" data-f="${hxe(n.key)}"${d?` style="padding-left:calc(${30+(d-1)*16}px*var(--z))"`:''}><b>${hxe(lab0(n,d))}</b><span class="n">${I.length} interni</span>${ub(I)}${nums(sum(I))}<span class="chev">${o?'▾':'▸'}</span></div>`
    +(o?kids(n).map(c=>rnode(c,d+1)).join(''):'');
@@ -335,12 +337,13 @@ function drawPins(){
   e.style.left=p.x*100+'%';e.style.top=p.y*100+'%';
   if(!t){e.style.background='#f4ff2e';e.style.borderColor='#222'}
   else{const c=tagColor(t);e.style.borderColor=c||'#888';if(!c)e.style.borderStyle='dashed';e.style.background=d?'#5fd47a':'#fff'}
+  if(!d&&(me?dr.pri:p.priorita==='alta')){const b=document.createElement('i');b.className='pb';e.appendChild(b)}
   L.appendChild(e);
  }
 }
 async function openInt(k){
  const i=interni[k];if(!i.plan)return toast('Manca '+i.p[i.p.length-1].toLowerCase()+'.jpg nella cartella '+i.k);
- cur=i;data=i.d||{pins:[]};data.pins=data.pins||[];pin=null;prioShow();
+ cur=i;data=i.d||{pins:[]};data.pins=data.pins||[];pin=null;
  if(data.interno&&String(data.interno).toUpperCase()!==i.k)toast('Attenzione: questo dati.json appartiene a '+data.interno+', non a '+i.k);
  $('#vt').textContent=i.p.join(' › ').toUpperCase();$('#viewer').style.display='block';
  const im=$('#plan');im.onload=()=>{fit();drawPins()};
@@ -351,11 +354,6 @@ $('#vback').onclick=closeViewer;
 $('#zi').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1.4);
 $('#zo').onclick=()=>zoomAt(innerWidth/2,innerHeight/2,1/1.4);
 $('#zf').onclick=fit;
-function prioShow(){const h=data&&data.priorita==='alta';$('#prio').classList.toggle('hi',h);$('#prt').textContent=h?'PRIORITÀ ALTA':'Priorità normale'}
-$('#prio').onclick=async()=>{
- const old=data.priorita;data.priorita=old==='alta'?'normale':'alta';prioShow();
- try{await saveData()}catch{data.priorita=old;prioShow();toast('Errore: priorità non salvata')}
-};
 const setPz=v=>{pz=Math.min(2.5,Math.max(.5,Math.round(v*10)/10));LS.pz=pz;apply()};
 $('#pm').onclick=()=>setPz(pz-.2);$('#pp').onclick=()=>setPz(pz+.2);
 
@@ -413,10 +411,12 @@ function centerChip(){const c=$('#chips'),on=c.querySelector('.on');if(on)c.scro
 $('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;dr.tag=b.dataset.n;chips();drawPins()};
 function stato(){const b=$('#stato');b.textContent=dr.done?'✓ Risolta':'Aperta';b.style.background=dr.done?'#5fd47a':'#f59e0b';b.style.color='#111'}
 $('#stato').onclick=()=>{dr.done=!dr.done;stato();drawPins()};
+function priShow(){$('#pri').classList.toggle('hi',!!dr.pri);$('#prl').textContent=dr.pri?'Priorità alta':'Priorità'}
+$('#pri').onclick=()=>{dr.pri=!dr.pri;priShow();drawPins()};
 async function edit(p,nuovo){
- pin=p;isNew=nuovo;photoBlob=null;dr={tag:tagColor(p.tag)?p.tag:'',done:!!p.done};
+ pin=p;isNew=nuovo;photoBlob=null;dr={tag:tagColor(p.tag)?p.tag:'',done:!!p.done,pri:p.priorita==='alta'};
  $('#desc').value=p.desc||'';$('#desc').placeholder='Descrizione segnalazione '+p.n;dtShow(p);
- chips();stato();$('#del').style.display=nuovo?'none':'';
+ chips();stato();priShow();$('#del').style.display=nuovo?'none':'';
  showPh('');
  $('#sheet').style.display='flex';fitBtns();centerChip();drawPins();reveal();
  if(p.photo){try{if(!cache[p.photo])cache[p.photo]=URL.createObjectURL(await dl(cur.dir+'/foto/'+p.photo));if(pin===p)showPh(cache[p.photo])}catch{}}
@@ -442,14 +442,14 @@ const onFoto=async e=>{
 };
 $('#fcam').onchange=$('#fgal').onchange=onFoto;
 const saveData=async()=>{
- const o={edificio:cur.b,piano:cur.f,interno:cur.k,percorso:cur.p.join('/')};for(const k in data)if(!(k in o))o[k]=data[k];data=o;
+ const o={edificio:cur.b,piano:cur.f,interno:cur.k,percorso:cur.p.join('/')};for(const k in data)if(!(k in o)&&k!=='priorita')o[k]=data[k];data=o;
  await jput(cur.dir+'/dati.json',data);cur.d=data;cur.has=1;
 };
 $('#save').onclick=async()=>{
  if(!dr.tag)return toast('Scegli una categoria');
  const p=pin,b=$('#save');b.disabled=true;b.textContent='Salvo…';
- const old={desc:p.desc,tag:p.tag,done:p.done,photo:p.photo,creato:p.creato,modificato:p.modificato};
- p.desc=$('#desc').value.trim();p.tag=dr.tag;p.done=dr.done;if(!isNew)p.modificato=iso();
+ const old={desc:p.desc,tag:p.tag,done:p.done,photo:p.photo,creato:p.creato,modificato:p.modificato,priorita:p.priorita};
+ p.desc=$('#desc').value.trim();p.tag=dr.tag;p.done=dr.done;if(dr.pri)p.priorita='alta';else delete p.priorita;if(!isNew)p.modificato=iso();
  try{
   if(photoBlob){p.photo=`${cur.k}_${p.n}_${Date.now()}.jpg`;await up(cur.dir+'/foto/'+p.photo,photoBlob);cache[p.photo]=URL.createObjectURL(photoBlob)}
   if(isNew)data.pins.push(p);
@@ -469,7 +469,7 @@ $('#del').onclick=async function(){
 
 /* ---------- Report PDF ---------- */
 let R={};
-const rcount=i=>(R.pr&&!urg(i))?[]:((i.d&&i.d.pins)||[]).filter(x=>R.cats.has(x.tag)&&!!x.done===(R.st=='closed'));
+const rcount=i=>((i.d&&i.d.pins)||[]).filter(x=>R.cats.has(x.tag)&&!!x.done===(R.st=='closed')&&(!R.pr||x.priorita==='alta'));
 const rgrp=k=>Object.values(interni).filter(i=>i.key===k||i.key.startsWith(k+'/'));
 function openReport(st){
  R={st,pr:false,cats:new Set(tags.map(t=>t.n)),sel:new Set(),ob:new Set()};$('#rpr').checked=false;$('#rres').style.display='none';$('#rcancel').textContent='Annulla';
@@ -520,6 +520,7 @@ async function planPic(i,pins){
   const cx=p.x*W,cy=p.y*H;x.beginPath();x.arc(cx,cy,r,0,7);x.fillStyle=p.done?'#5fd47a':'#fff';x.fill();
   x.lineWidth=r*.32;x.strokeStyle=tagColor(p.tag)||'#888888';x.stroke();
   x.fillStyle='#111';x.font='bold '+Math.round(r*1.05)+'px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(p.n,cx,cy+r*.04);
+  if(p.priorita==='alta'&&!p.done){const q=r*.62,bx=cx+r*.95,by=cy-r*.95;x.beginPath();x.moveTo(bx,by-q);x.lineTo(bx+q,by);x.lineTo(bx,by+q);x.lineTo(bx-q,by);x.closePath();x.fillStyle='#d62828';x.fill();x.lineWidth=r*.16;x.strokeStyle='#fff';x.stroke();x.fillStyle='#fff';x.font='bold '+Math.round(q*1.25)+'px sans-serif';x.fillText('!',bx,by+q*.06)}
  }
  return{u:c.toDataURL('image/jpeg',.82),w:W,h:H};
 }
@@ -571,11 +572,6 @@ async function makeReport(){
    // intestazione interno
    doc.setFillColor(232,236,240);doc.rect(M,y,IW,HH-1,'F');doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(20);
    doc.text(lat(`${i.k}${ctx(i)?'   '+ctx(i):''}`),M+2,y+5.3);
-   if(urg(i)){
-    doc.setFillColor(214,40,40);doc.rect(PW-M-44,y+.8,43.2,5.4,'F');doc.setFillColor(255,255,255);
-    const cx=PW-M-40,cy=y+3.5;doc.triangle(cx,cy-2.2,cx+2.2,cy,cx,cy+2.2,'F');doc.triangle(cx,cy-2.2,cx-2.2,cy,cx,cy+2.2,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);doc.text('PRIORITÀ ALTA',PW-M-36.5,y+4.6);
-   }
    y+=HH;
    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(40);
    items.forEach(t=>{doc.setFillColor(...rgb(tagColor(t.c)));doc.rect(t.x,y+t.y+.6,3.2,3.2,'F');doc.text(lat(t.c),t.x+4.6,y+t.y+3.4)});
@@ -589,6 +585,7 @@ async function makeReport(){
       doc.setFillColor(...rgb(tagColor(c.p.tag)));doc.circle(x+2.4,y+2.6,2.1,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(20);
       doc.text(lat(`n° ${c.p.n}   ${c.p.tag}  ·  ${c.p.done?'Risolta':'Aperta'}`),x+6,y+3.4);
+      if(c.p.priorita==='alta'){const tx=x+CW-32,dx=tx+3.4,dy=y+2.7;doc.setFillColor(214,40,40);doc.rect(tx,y+.2,32,5,'F');doc.setFillColor(255,255,255);doc.triangle(dx,dy-1.7,dx+1.7,dy,dx,dy+1.7,'F');doc.triangle(dx,dy-1.7,dx-1.7,dy,dx,dy+1.7,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);doc.text('PRIORITÀ ALTA',tx+6,y+3.8)}
       let yy=y+7;doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(30);
       c.lines.forEach(l=>{doc.text(l,x,yy+3);yy+=4.2});
       if(c.dates){doc.setFontSize(8);doc.setTextColor(120);doc.text(c.dates,x,yy+3);yy+=4.6}
