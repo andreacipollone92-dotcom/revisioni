@@ -121,6 +121,14 @@ input{font:inherit}
 .dia{width:calc(20px*var(--z));height:calc(20px*var(--z));vertical-align:calc(-4px*var(--z));margin-right:calc(4px*var(--z))}
 .ub{font-weight:800;color:#d62828;white-space:nowrap;font-size:calc(18px*var(--z))}
 #rres{display:none;gap:calc(8px*var(--z));margin:calc(10px*var(--z)) 0}#rres .btn{flex:1}
+#sheet{height:auto;max-height:60%;overflow:hidden}
+#sbody{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:calc(8px*var(--z))}
+#sheet .acts{margin-top:0;flex:none}
+.fb{flex:none;height:calc(130px*var(--z));min-height:0}
+#chips{flex:none;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;position:relative;padding:calc(2px*var(--z)) 0 calc(4px*var(--z));-webkit-mask-image:linear-gradient(to right,#000 calc(100% - calc(26px*var(--z))),transparent);mask-image:linear-gradient(to right,#000 calc(100% - calc(26px*var(--z))),transparent)}
+#chips.end{-webkit-mask-image:none;mask-image:none}
+.chip{flex:none;white-space:nowrap}
+.ed>.row:first-child{border-top:0}
 </style></head><body>
 <div id="app">
 <header><h1 id="ttl"></h1>
@@ -136,10 +144,12 @@ input{font:inherit}
 </div>
 
 <div id="sheet">
+ <div id="sbody">
  <div id="dt"></div>
- <textarea id="desc" rows="4"></textarea>
+ <textarea id="desc" rows="2"></textarea>
  <div id="chips"></div>
  <div class="fb"><div id="phw"><img id="ph" alt="Foto"><span id="phe">Nessuna foto</span></div><div class="fbb"><button class="btn g" id="bcam"><span>📷</span><span class="tx"> Scatta</span></button><button class="btn g" id="bgal"><span>🖼</span><span class="tx"> Galleria</span></button></div></div>
+ </div>
  <input type="file" id="fcam" accept="image/*" capture="environment" hidden>
  <input type="file" id="fgal" accept="image/*" hidden>
  <div class="acts"><button class="btn" id="stato">Aperta</button><button class="btn g" id="cancel">Annulla</button><button class="btn d" id="del">🗑</button><button class="btn" id="save">Salva</button></div>
@@ -286,7 +296,7 @@ function render(){
  const all=sum(L);let h='';
  const rnode=(n,d)=>{
   if(n.leaf){const i=n.leaf,pl=d==0?18:30+(d-1)*16;
-   return `<div class="row" data-k="${hxe(i.key)}" style="padding-left:calc(${pl}px*var(--z))"><b>${urg(i)?DIA:''}${hxe(i.k)}</b><span>${i.plan?'':'manca '+esc(i.p[i.p.length-1].toLowerCase())+'.jpg'}</span>${nums(cnt(i))}</div>`}
+   return `<div class="row" data-k="${hxe(i.key)}" style="padding-left:calc(${pl}px*var(--z))"><b>${urg(i)?DIA:''}${hxe(i.k)}</b><span>${i.plan?'':'manca '+hxe(i.p[i.p.length-1].toLowerCase())+'.jpg'}</span>${nums(cnt(i))}</div>`}
   const I=leaves(n),o=openF.has(n.key);
   return `<div class="${d?'fh':'eh'}" data-f="${hxe(n.key)}"${d?` style="padding-left:calc(${30+(d-1)*16}px*var(--z))"`:''}><b>${hxe(lab0(n,d))}</b><span class="n">${I.length} interni</span>${ub(I)}${nums(sum(I))}<span class="chev">${o?'▾':'▸'}</span></div>`
    +(o?kids(n).map(c=>rnode(c,d+1)).join(''):'');
@@ -394,8 +404,12 @@ function tap(e,el){
 /* ---------- Segnalazione ---------- */
 function chips(){
  const L=tags.some(t=>t.n==dr.tag)||!dr.tag?tags:[...tags,{n:dr.tag,c:'#888888'}];
- $('#chips').innerHTML=L.map(t=>`<button class="chip${t.n==dr.tag?' on':''}" data-n="${t.n.replace(/"/g,'&quot;')}" style="border-color:${t.c};${t.n==dr.tag?'background:'+t.c:''}">${t.n}</button>`).join('');
+ const sl=$('#chips').scrollLeft;$('#chips').innerHTML=L.map(t=>`<button class="chip${t.n==dr.tag?' on':''}" data-n="${t.n.replace(/"/g,'&quot;')}" style="border-color:${t.c};${t.n==dr.tag?'background:'+t.c:''}">${t.n}</button>`).join('');
+ $('#chips').scrollLeft=sl;chipsEdge();
 }
+function chipsEdge(){const c=$('#chips');c.classList.toggle('end',c.scrollLeft+c.clientWidth>=c.scrollWidth-2)}
+$('#chips').addEventListener('scroll',chipsEdge);
+function centerChip(){const c=$('#chips'),on=c.querySelector('.on');if(on)c.scrollLeft=on.offsetLeft-(c.clientWidth-on.offsetWidth)/2;chipsEdge()}
 $('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;dr.tag=b.dataset.n;chips();drawPins()};
 function stato(){const b=$('#stato');b.textContent=dr.done?'✓ Risolta':'Aperta';b.style.background=dr.done?'#5fd47a':'#f59e0b';b.style.color='#111'}
 $('#stato').onclick=()=>{dr.done=!dr.done;stato();drawPins()};
@@ -404,7 +418,7 @@ async function edit(p,nuovo){
  $('#desc').value=p.desc||'';$('#desc').placeholder='Descrizione segnalazione '+p.n;dtShow(p);
  chips();stato();$('#del').style.display=nuovo?'none':'';
  showPh('');
- $('#sheet').style.display='flex';fitBtns();drawPins();reveal();
+ $('#sheet').style.display='flex';fitBtns();centerChip();drawPins();reveal();
  if(p.photo){try{if(!cache[p.photo])cache[p.photo]=URL.createObjectURL(await dl(cur.dir+'/foto/'+p.photo));if(pin===p)showPh(cache[p.photo])}catch{}}
 }
 function closeSheet(){$('#sheet').style.display='none';pin=null;if(data)drawPins()}
